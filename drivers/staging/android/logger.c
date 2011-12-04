@@ -616,7 +616,7 @@ static int __init logger_init(void)
 	int ret;
     /* user log on/off must be controlled by NV */
     /* usb rpc to replace pcom mechanism for fix reset issue */
-#ifdef CONFIG_HUAWEI_KERNEL
+#if 0// CONFIG_HUAWEI_KERNEL
     u16 nv_item = LOG_CTL_INFO_ITEM;
     struct log_ctl ctl_info;
     int  rval = -1;
@@ -628,6 +628,7 @@ static int __init logger_init(void)
     /*if log nv(NV_LOG_CTL_INFO_I) is 0 or inactive , we don't init the logger driver*/
     if((rval != 0) || (ctl_info.on_off_flag != USER_LOG_ON))
         return 0;	
+	
 #endif
 	
 	ret = init_log(&log_main);
@@ -650,3 +651,7 @@ out:
 	return ret;
 }
 device_initcall(logger_init);
+<<<<<<< HEAD
+=======
+/*DTS2011092603497 mazhenhua 20110928 end >*/
+>>>>>>> a178d94... logger: always enable log

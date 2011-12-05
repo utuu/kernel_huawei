@@ -651,7 +651,3 @@ out:
 	return ret;
 }
 device_initcall(logger_init);
-<<<<<<< HEAD
-=======
-/*DTS2011092603497 mazhenhua 20110928 end >*/
->>>>>>> a178d94... logger: always enable log

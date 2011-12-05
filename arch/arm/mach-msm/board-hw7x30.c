@@ -9361,7 +9361,7 @@ MACHINE_START(MSM8X55_SVLTE_FFA, "QCT MSM8X55 SVLTE FFA")
 	.handle_irq = vic_handle_irq,
 MACHINE_END
 
-MACHINE_START(MSM7X30_U8800, "HUAWEI U8800 BOARD")
+MACHINE_START(MSM7X30_U8800, "u8800")
 	.boot_params = PHYS_OFFSET + 0x100,
 	.fixup = msm7x30_fixup,
 	.map_io = msm7x30_map_io,

@@ -583,7 +583,7 @@ static int aps_12d_probe(
     }
 
     /* set gp4 voltage as 2700mV for all */
-    rc = regulator_set_voltage(vreg_gp4,VREG_GP4_VOLTAGE_VALUE_2700,VREG_GP4_VOLTAGE_VALUE_2700);
+    rc = regulator_set_voltage(vreg_gp4,VREG_GP4_VOLTAGE_VALUE_2700*1000,VREG_GP4_VOLTAGE_VALUE_2700*1000);
     
 	if (rc) {
 		PROXIMITY_DEBUG("%s: vreg_gp4  vreg_set_level failed \n", __func__);

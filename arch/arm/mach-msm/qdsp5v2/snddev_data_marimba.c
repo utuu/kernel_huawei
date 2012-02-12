@@ -117,10 +117,10 @@ static struct snddev_icodec_data snddev_iearpiece_data_u8800 = {
 	.pamp_on = NULL,
 	.pamp_off = NULL,
 	.property = SIDE_TONE_MASK,
-	.max_voice_rx_vol[VOC_NB_INDEX] = -700,
-	.min_voice_rx_vol[VOC_NB_INDEX] = -2200,
-	.max_voice_rx_vol[VOC_WB_INDEX] = -700,
-	.min_voice_rx_vol[VOC_WB_INDEX] = -2200
+	.max_voice_rx_vol[VOC_NB_INDEX] = 1000,
+	.min_voice_rx_vol[VOC_NB_INDEX] = -1000,
+	.max_voice_rx_vol[VOC_WB_INDEX] = 1000,
+	.min_voice_rx_vol[VOC_WB_INDEX] = -1000
 };
 
 static struct platform_device msm_iearpiece_device_u8800 = {

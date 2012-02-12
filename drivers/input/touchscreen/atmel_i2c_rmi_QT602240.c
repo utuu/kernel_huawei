@@ -146,7 +146,7 @@ static extra_key_region   touch_extra_key_region =
 /* the value 24 (the gap between touch region and key region)maybe need to modify*/
       {(TS_X_MAX*1/8),   (TS_Y_MAX-TS_KEY_Y_MAX/2+26), TS_X_MAX/10, TS_KEY_Y_MAX/3, KEY_BACK},  /*back key */
        {(TS_X_MAX*3/8),   (TS_Y_MAX-TS_KEY_Y_MAX/2+26), TS_X_MAX/10, TS_KEY_Y_MAX/3, KEY_MENU},  /* menu key */
-       {(TS_X_MAX*5/8),   (TS_Y_MAX-TS_KEY_Y_MAX/2+26), TS_X_MAX/10, TS_KEY_Y_MAX/3, KEY_HOME},  /* KEY_F2,KEY_HOME home key */
+       {(TS_X_MAX*5/8),   (TS_Y_MAX-TS_KEY_Y_MAX/2+26), TS_X_MAX/10, TS_KEY_Y_MAX/3, KEY_HOMEPAGE},  /* KEY_F2,KEY_HOME home key */
        {(TS_X_MAX*7/8),   (TS_Y_MAX-TS_KEY_Y_MAX/2+26), TS_X_MAX/10, TS_KEY_Y_MAX/3, KEY_SEARCH},  /* Search key */
     },
 };
@@ -2292,7 +2292,7 @@ static void atmel_ts_work_func(struct work_struct *work)
 						if (ts->test > 0) 
 							key_pressed = KEY_BRL_DOT3;
 						else
-							key_pressed = KEY_HOME;
+							key_pressed = KEY_HOMEPAGE;
 					 	touch_input_report_key(ts, key_pressed, 1);
 						input_sync(ts->input_dev);
 					}

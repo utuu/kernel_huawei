@@ -63,8 +63,11 @@ DEVICE_ATTR(_pre##_##_name,_mode,_pre##_##_name##_show,_pre##_##_name##_store)
 #define BTN_F30 BTN_0
 #define SCROLL_ORIENTATION REL_Y
 
+#define F11_2D_CTRL14 0x0065
+#define SENSITIVE 8
+#define F11_2D_CTRL00 0x0027
+#define REPORTING_MODE 0x00
 
-//#define TS_RMI_DEBUG
 #undef TS_RMI_DEBUG 
 #ifdef TS_RMI_DEBUG
 #define TS_DEBUG_RMI(fmt, args...) printk(KERN_INFO fmt, ##args)
@@ -886,6 +889,7 @@ static int synaptics_rmi4_probe(
 		ret = -ENODEV;
 		goto err_pdt_read_failed;
 	}
+
 /*create the right file used for update*/
 #ifdef CONFIG_SYNAPTICS_UPDATE_RMI_TS_FIRMWARE
     g_client = client;  
@@ -907,6 +911,30 @@ static int synaptics_rmi4_probe(
     {
         printk("the tp input name is query error!\n ");
     }
+
+        if (ts->f11_has_Sensitivity_Adjust) {
+                ret =
+                    i2c_smbus_write_byte_data(ts->client, F11_2D_CTRL14,
+                                              SENSITIVE);
+                if (ret < 0) {
+                        printk(KERN_ERR "%s: failed to write err=%d\n",
+                               __FUNCTION__, ret);
+                } else {
+                        TS_DEBUG_RMI("the SENSITIVE is changged ok!\n");
+                }
+        } else {
+                printk(KERN_ERR "the SENSITIVE is failed to changge!\n");
+        }
+        ret =
+            i2c_smbus_write_byte_data(ts->client, F11_2D_CTRL00,
+                                      REPORTING_MODE);
+        if (ret < 0) {
+                printk(KERN_ERR "%s: ReportingMode failed to write err=%d\n",
+                       __FUNCTION__, ret);
+        } else {
+                TS_DEBUG_RMI("the ReportingMode is changged ok!\n");
+        }
+
 	d_entry = create_proc_entry("tp_hw_type", S_IRUGO | S_IWUSR | S_IWGRP, NULL);
 	if (d_entry) {
 		d_entry->read_proc = tp_read_proc;

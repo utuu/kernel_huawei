@@ -2820,10 +2820,7 @@ static void msm_marimba_shutdown_power(void)
 	if (rc)
 		pr_err("%s: regulator_disable failed (%d)\n", __func__, rc);
 };
-/*bcm4329 do not use this function*/
 
-#ifdef CONFIG_HUAWEI_KERNEL
-/* DTS2011030705328 sihongfang 20110311 end > */
 static int bahama_present(void)
 {
 	int id;
@@ -2978,7 +2975,6 @@ static struct marimba_fm_platform_data marimba_fm_pdata = {
 	.is_fm_soc_i2s_master = false,
 	.config_i2s_gpio = NULL,
 };
-#endif
 
 /* Slave id address for FM/CDC/QMEMBIST
  * Values can be programmed using Marimba slave id 0
@@ -3218,9 +3214,7 @@ static struct marimba_platform_data marimba_pdata = {
 	.marimba_gpio_config = msm_marimba_gpio_config_svlte,
 	.bahama_core_config = msm_bahama_core_config,
 /*bcm4329 do not use this function*/
-#ifdef CONFIG_HUAWEI_KERNEL
 	.fm = &marimba_fm_pdata,
-#endif
 	.codec = &mariba_codec_pdata,
 	.tsadc_ssbi_adap = MARIMBA_SSBI_ADAP,
 };

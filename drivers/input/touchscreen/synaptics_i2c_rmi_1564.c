@@ -934,6 +934,10 @@ static int synaptics_rmi4_probe(
         } else {
                 TS_DEBUG_RMI("the ReportingMode is changged ok!\n");
         }
+	// Change the mimimum delta value for a touch to be reported.
+	// these addresses were found by trial and error!
+	ret = i2c_smbus_write_byte_data(ts->client, 41 ,4);
+	ret = i2c_smbus_write_byte_data(ts->client, 42 ,4);
 
 	d_entry = create_proc_entry("tp_hw_type", S_IRUGO | S_IWUSR | S_IWGRP, NULL);
 	if (d_entry) {
@@ -1703,6 +1707,26 @@ static void __exit synaptics_rmi4_exit(void)
 	if (synaptics_wq)
 		destroy_workqueue(synaptics_wq);
 }
+
+static int set_sens(const char *val, struct kernel_param *kp) {
+	int v;
+	char *e;
+	int ret;
+
+	v=simple_strtoul(val, &e, 10);
+        ret = i2c_smbus_write_byte_data(ts->client, 41 ,v);
+        ret = i2c_smbus_write_byte_data(ts->client, 42 ,v);
+
+        return 0;
+}
+
+static int get_sens(char *buffer, struct kernel_param *kp) {
+	int v;
+	v=i2c_smbus_read_byte_data(ts->client, 41 );
+        return sprintf(buffer,"%x",v);
+}
+
+module_param_call(sensitivity, set_sens, get_sens, NULL, S_IWUSR | S_IRUSR);
 
 module_init(synaptics_rmi4_init);
 module_exit(synaptics_rmi4_exit);

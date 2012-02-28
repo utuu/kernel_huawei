@@ -181,9 +181,9 @@ struct msm_mctl_post_proc_cmd {
 #define MSM_CAMERA_LED_OFF  0
 #define MSM_CAMERA_LED_LOW  1
 #define MSM_CAMERA_LED_HIGH 2
-#define MSM_CAMERA_LED_INIT 3
+#define MSM_CAMERA_LED_INIT 5
 #define MSM_CAMERA_LED_RELEASE 4
-#define MSM_CAMERA_LED_TORCH 5
+#define MSM_CAMERA_LED_TORCH 3
 
 #define MSM_CAMERA_STROBE_FLASH_NONE 0
 #define MSM_CAMERA_STROBE_FLASH_XENON 1
@@ -223,9 +223,9 @@ struct msm_ctrl_cmd {
 	uint16_t status;
 	uint32_t timeout_ms;
 	int resp_fd; /* FIXME: to be used by the kernel, pass-through for now */
-	int vnode_id;  /* video dev id. Can we overload resp_fd? */
-	uint32_t stream_type; /* used to pass value to qcamera server */
-	int config_ident; /*used as identifier for config node*/
+//	int vnode_id;  /* video dev id. Can we overload resp_fd? */
+//	uint32_t stream_type; /* used to pass value to qcamera server */
+//	int config_ident; /*used as identifier for config node*/
 };
 
 struct msm_cam_evt_msg {
@@ -309,13 +309,13 @@ struct msm_isp_event_ctrl {
 
 #define MSM_CAM_RESP_CTRL              0
 #define MSM_CAM_RESP_STAT_EVT_MSG      1
-#define MSM_CAM_RESP_STEREO_OP_1       2
+#define MSM_CAM_RESP_STEREO_OP_1       4
 #define MSM_CAM_RESP_STEREO_OP_2       3
-#define MSM_CAM_RESP_V4L2              4
+#define MSM_CAM_RESP_V4L2              2
 #define MSM_CAM_RESP_DIV_FRAME_EVT_MSG 5
 #define MSM_CAM_RESP_DONE_EVENT        6
 #define MSM_CAM_RESP_MCTL_PP_EVENT     7
-#define MSM_CAM_RESP_MAX               8
+#define MSM_CAM_RESP_MAX               4
 
 #define MSM_CAM_APP_NOTIFY_EVENT  0
 
@@ -523,9 +523,9 @@ struct msm_mem_map_info {
 struct msm_frame {
 	struct timespec ts;
 	int path;
-	int type;
+//	int type;
 	unsigned long buffer;
-	uint32_t phy_offset;
+//	uint32_t phy_offset;
 	uint32_t y_off;
 	uint32_t cbcr_off;
 	int fd;
@@ -534,12 +534,12 @@ struct msm_frame {
 	int croplen;
 	uint32_t error_code;
 	struct fd_roi_info roi_info;
-	uint32_t frame_id;
-	int stcam_quality_ind;
-	uint32_t stcam_conv_value;
+//	uint32_t frame_id;
+//	int stcam_quality_ind;
+//	uint32_t stcam_conv_value;
 
-	struct ion_allocation_data ion_alloc;
-	struct ion_fd_data fd_data;
+//	struct ion_allocation_data ion_alloc;
+//	struct ion_fd_data fd_data;
 };
 
 enum msm_st_frame_packing {
@@ -577,6 +577,13 @@ struct msm_st_frame {
 
 #define MSM_CAMERA_ERR_MASK (0xFFFFFFFF & 1)
 
+struct msm_stats_buf {
+        int type;
+        unsigned long buffer;
+        int fd;
+};
+
+/*
 struct stats_buff {
 	unsigned long buff;
 	int fd;
@@ -597,6 +604,7 @@ struct msm_stats_buf {
 	int fd;
 	uint32_t frame_id;
 };
+*/
 #define MSM_V4L2_EXT_CAPTURE_MODE_DEFAULT 0
 /* video capture mode in VIDIOC_S_PARM */
 #define MSM_V4L2_EXT_CAPTURE_MODE_PREVIEW \

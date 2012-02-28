@@ -288,9 +288,10 @@ static int msm_vb2_mem_ops_mmap(void *buf_priv, struct vm_area_struct *vma)
 	vma->vm_flags |= VM_DONTEXPAND;
 	vma->vm_private_data = mem;
 
-	D("mmap %p: %08lx-%08lx (%lx) pgoff %08lx\n",
-		map, vma->vm_start, vma->vm_end,
+/*	D("mmap %p: %08lx-%08lx (%lx) pgoff %08lx\n",
+		mem->phyaddr, vma->vm_start, vma->vm_end,
 		(long int)mem->bsize, vma->vm_pgoff);
+*/
 	videobuf2_vm_open(vma);
 	return 0;
 error:

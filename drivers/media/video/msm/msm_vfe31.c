@@ -421,7 +421,7 @@ static void vfe31_proc_ops(enum VFE31_MESSAGE_ID id, void *msg, size_t len)
 			&(rp->extlen));
 		break;
 
-	case MSG_ID_COMMON:
+/*	case MSG_ID_COMMON:
 		rp->type = VFE_MSG_COMMON;
 		rp->stats_msg.status_bits = ((struct vfe_message *)
 			rp->evt_msg.data)->_u.msgStats.status_bits;
@@ -443,6 +443,7 @@ static void vfe31_proc_ops(enum VFE31_MESSAGE_ID id, void *msg, size_t len)
 		rp->stats_msg.awb_ymin = ((struct vfe_message *)
 			rp->evt_msg.data)->_u.msgStats.buff.awb_ymin;
 		break;
+*/
 
 	case MSG_ID_SYNC_TIMER0_DONE:
 		rp->type = VFE_MSG_SYNC_TIMER0;
@@ -2519,7 +2520,7 @@ static void vfe31_process_reg_update_irq(void)
 		} else if (vfe31_ctrl->recording_state ==
 			VFE_REC_STATE_STOPPED) {
 			CDBG("sent stop video rec ACK");
-			vfe31_send_msg_no_payload(MSG_ID_STOP_REC_ACK);
+//			vfe31_send_msg_no_payload(MSG_ID_STOP_REC_ACK);
 			vfe31_ctrl->recording_state = VFE_REC_STATE_IDLE;
 		}
 		spin_lock_irqsave(&vfe31_ctrl->update_ack_lock, flags);
@@ -3245,6 +3246,7 @@ static uint32_t  vfe31_process_stats_irq_common(uint32_t statsNum,
 	return returnAddr;
 }
 
+#if 0
 static void vfe_send_stats_msg(void)
 {
 	struct  vfe_message msg;
@@ -3270,6 +3272,7 @@ static void vfe_send_stats_msg(void)
 		&msg, sizeof(struct vfe_message));
 	return;
 }
+#endif
 
 static void vfe31_process_stats(void)
 {
@@ -3369,8 +3372,8 @@ static void vfe31_process_stats(void)
 		vfe31_ctrl->csStatsControl.bufToRender = 0;
 	}
 
-	if (process_stats)
-		vfe_send_stats_msg();
+//	if (process_stats)
+//		vfe_send_stats_msg();
 
 	return;
 }

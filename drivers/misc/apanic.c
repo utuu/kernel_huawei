@@ -447,6 +447,7 @@ static void mtd_panic_notify_add(struct mtd_info *mtd)
 	int rc;
 	int    proc_entry_created = 0;
 
+	printk("mtd_panic_notify_add %s\n",mtd->name);
 	if (strcmp(mtd->name, CONFIG_APANIC_PLABEL))
 		return;
 
@@ -1435,7 +1436,7 @@ DEFINE_SIMPLE_ATTRIBUTE(panic_dbg_fops, panic_dbg_get, panic_dbg_set, "%llu\n");
 
 int __init apanic_init(void)
 {
-//	register_mtd_user(&mtd_panic_notifier);
+	register_mtd_user(&mtd_panic_notifier);
 	atomic_notifier_chain_register(&panic_notifier_list, &panic_blk);
 	debugfs_create_file("apanic", 0644, NULL, NULL, &panic_dbg_fops);
 	memset(&drv_ctx, 0, sizeof(drv_ctx));

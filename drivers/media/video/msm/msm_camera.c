@@ -767,7 +767,7 @@ static int __msm_get_frame(struct msm_sync *sync,
 	frame->cbcr_off = pmem_info.cbcr_off;
 	frame->fd = pmem_info.fd;
 	frame->path = vdata->phy.output_id;
-	frame->frame_id = vdata->phy.frame_id;
+//	frame->frame_id = vdata->phy.frame_id;
 
 	CDBG("%s: y %x, cbcr %x, qcmd %x, virt_addr %x\n",
 		__func__,
@@ -826,8 +826,8 @@ static int msm_get_frame(struct msm_sync *sync, void __user *arg)
 	}
 
 	if (sync->stereocam_enabled) {
-		frame.stcam_conv_value = sync->stcam_conv_value;
-		frame.stcam_quality_ind = sync->stcam_quality_ind;
+//		frame.stcam_conv_value = sync->stcam_conv_value;
+//		frame.stcam_quality_ind = sync->stcam_quality_ind;
 	}
 
 	if (copy_to_user((void *)arg,
@@ -1187,7 +1187,7 @@ static int msm_divert_st_frame(struct msm_sync *sync,
 			buf.packing = sync->sctrl.s_video_packing;
 
 		buf.buf_info.buffer = (unsigned long)pinfo.vaddr;
-		buf.buf_info.phy_offset = pinfo.offset;
+//		buf.buf_info.phy_offset = pinfo.offset;
 		buf.buf_info.y_off = pinfo.y_off;
 		buf.buf_info.cbcr_off = pinfo.cbcr_off;
 		buf.buf_info.fd = pinfo.fd;
@@ -1206,6 +1206,7 @@ static int msm_divert_st_frame(struct msm_sync *sync,
 
 static int msm_get_stats(struct msm_sync *sync, void __user *arg)
 {
+	int timeout;
 	int rc = 0;
 
 	struct msm_stats_event_ctrl se;
@@ -1222,6 +1223,22 @@ static int msm_get_stats(struct msm_sync *sync, void __user *arg)
 		pr_err("%s, ERR_COPY_FROM_USER\n", __func__);
 		return -EFAULT;
 	}
+        timeout = (int)se.timeout_ms;
+
+        CDBG("%s: timeout %d\n", __func__, timeout);
+        rc = wait_event_interruptible_timeout(
+                        sync->event_q.wait,
+                        !list_empty_careful(&sync->event_q.list),
+                        msecs_to_jiffies(timeout));
+        if (list_empty_careful(&sync->event_q.list)) {
+                if (rc == 0)
+                        rc = -ETIMEDOUT;
+                if (rc < 0) {
+                        pr_err("%s: error %d\n", __func__, rc);
+                        return rc;
+                }
+        }
+        CDBG("%s: returned from wait: %d\n", __func__, rc);
 
 	rc = 0;
 
@@ -1237,6 +1254,7 @@ static int msm_get_stats(struct msm_sync *sync, void __user *arg)
 	CDBG("%s: received from DSP %d\n", __func__, qcmd->type);
 
 	switch (qcmd->type) {
+#if 0
 	case MSM_CAM_Q_VPE_MSG:
 		/* Complete VPE response. */
 		vpe_data = (struct msm_vpe_resp *)(qcmd->command);
@@ -1262,7 +1280,7 @@ static int msm_get_stats(struct msm_sync *sync, void __user *arg)
 				__func__, vpe_data->type);
 		}
 		break;
-
+#endif
 	case MSM_CAM_Q_VFE_EVT:
 	case MSM_CAM_Q_VFE_MSG:
 		data = (struct msm_vfe_resp *)(qcmd->command);
@@ -1274,13 +1292,14 @@ static int msm_get_stats(struct msm_sync *sync, void __user *arg)
 		se.stats_event.type   = data->evt_msg.type;
 		se.stats_event.msg_id = data->evt_msg.msg_id;
 		se.stats_event.len    = data->evt_msg.len;
-		se.stats_event.frame_id = data->evt_msg.frame_id;
+//		se.stats_event.frame_id = data->evt_msg.frame_id;
 
 		CDBG("%s: qcmd->type %d length %d msd_id %d\n", __func__,
 			qcmd->type,
 			se.stats_event.len,
 			se.stats_event.msg_id);
 
+#if 0
 		if (data->type == VFE_MSG_COMMON) {
 			stats.status_bits = data->stats_msg.status_bits;
 			stats.awb_ymin = data->stats_msg.awb_ymin;
@@ -1385,10 +1404,12 @@ static int msm_get_stats(struct msm_sync *sync, void __user *arg)
 				rc = -EFAULT;
 				goto failure;
 			}
-		} else if ((data->type >= VFE_MSG_STATS_AEC) &&
+		} else 
+#endif
+		if ((data->type >= VFE_MSG_STATS_AEC) &&
 			(data->type <=  VFE_MSG_STATS_WE)) {
 			/* the check above includes all stats type. */
-			stats.awb_ymin = data->stats_msg.awb_ymin;
+//			stats.awb_ymin = data->stats_msg.awb_ymin;
 			stats.buffer =
 				msm_pmem_stats_ptov_lookup(sync,
 						data->phy.sbuf_phy,
@@ -1399,7 +1420,7 @@ static int msm_get_stats(struct msm_sync *sync, void __user *arg)
 					rc = -EINVAL;
 					goto failure;
 			}
-			se.stats_event.frame_id = data->phy.frame_id;
+//			se.stats_event.frame_id = data->phy.frame_id;
 			if (copy_to_user((void *)(se.stats_event.data),
 					&stats,
 					sizeof(struct msm_stats_buf))) {
@@ -1417,6 +1438,7 @@ static int msm_get_stats(struct msm_sync *sync, void __user *arg)
 				goto failure;
 			}
 		} else {
+#if 0
 			if (sync->stereocam_enabled) {
 				if (data->type == VFE_MSG_OUTPUT_P) {
 					CDBG("%s: Preview mark as st op 1\n",
@@ -1450,20 +1472,21 @@ static int msm_get_stats(struct msm_sync *sync, void __user *arg)
 					CDBG("%s: VFE_MSG Fall Through\n",
 						__func__);
 			}
+#endif
 			if ((sync->pp_frame_avail == 1) &&
 				(sync->pp_mask & PP_PREV) &&
 				(data->type == VFE_MSG_OUTPUT_P)) {
 					CDBG("%s:%d:preiew PP\n",
 					__func__, __LINE__);
-					se.stats_event.frame_id =
-							data->phy.frame_id;
+//					se.stats_event.frame_id =
+//							data->phy.frame_id;
 					rc = msm_divert_frame(sync, data, &se);
 					sync->pp_frame_avail = 0;
 			} else {
 				if ((sync->pp_mask & PP_PREV) &&
 					(data->type == VFE_MSG_OUTPUT_P)) {
-					se.stats_event.frame_id =
-							data->phy.frame_id;
+//					se.stats_event.frame_id =
+//							data->phy.frame_id;
 					free_qcmd(qcmd);
 					return 0;
 				} else
@@ -2623,10 +2646,11 @@ static int msm_put_st_frame(struct msm_sync *sync, void __user *arg)
 			CDBG("%s: delivering right frame to VPE\n", __func__);
 			spin_lock_irqsave(&st_frame_spinlock, flags);
 
-			sync->stcam_conv_value =
+/*			sync->stcam_conv_value =
 				stereo_frame_half.buf_info.stcam_conv_value;
 			sync->stcam_quality_ind =
 				stereo_frame_half.buf_info.stcam_quality_ind;
+*/
 
 			st_pphy = msm_pmem_frame_vtop_lookup(sync,
 				stereo_frame_half.buf_info.buffer,

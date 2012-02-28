@@ -760,6 +760,7 @@ enum VFE_AXI_RD_UNPACK_HBI_SEL {
 	VFE_AXI_RD_HBI_4096_CLOCK_CYCLES
 };
 
+#if 0
 enum VFE31_MESSAGE_ID {
 	MSG_ID_RESET_ACK, /* 0 */
 	MSG_ID_START_ACK,
@@ -795,6 +796,49 @@ enum VFE31_MESSAGE_ID {
 	MSG_ID_SOF_ACK,
 	MSG_ID_STOP_REC_ACK,
 };
+#endif
+
+enum VFE31_MESSAGE_ID {
+        MSG_ID_RESET_ACK, /* 0 */
+        MSG_ID_START_ACK,
+        MSG_ID_STOP_ACK,
+        MSG_ID_UPDATE_ACK,
+        MSG_ID_OUTPUT_P,
+        MSG_ID_OUTPUT_T,
+        MSG_ID_OUTPUT_S,
+        MSG_ID_OUTPUT_V,
+        MSG_ID_SNAPSHOT_DONE,
+        MSG_ID_STATS_AEC,
+        MSG_ID_STATS_AF, /* 10 */
+        MSG_ID_STATS_AWB,
+        MSG_ID_STATS_RS,
+        MSG_ID_STATS_CS,
+        MSG_ID_STATS_IHIST,
+        MSG_ID_STATS_SKIN,
+        MSG_ID_EPOCH1,
+        MSG_ID_EPOCH2,
+        MSG_ID_SYNC_TIMER0_DONE,
+        MSG_ID_SYNC_TIMER1_DONE,
+        MSG_ID_SYNC_TIMER2_DONE, /* 20 */
+        MSG_ID_ASYNC_TIMER0_DONE,
+        MSG_ID_ASYNC_TIMER1_DONE,
+        MSG_ID_ASYNC_TIMER2_DONE,
+        MSG_ID_ASYNC_TIMER3_DONE,
+        MSG_ID_AE_OVERFLOW,
+        MSG_ID_AF_OVERFLOW,
+        MSG_ID_AWB_OVERFLOW,
+        MSG_ID_RS_OVERFLOW,
+        MSG_ID_CS_OVERFLOW,
+        MSG_ID_IHIST_OVERFLOW, /* 30 */
+        MSG_ID_SKIN_OVERFLOW,
+        MSG_ID_AXI_ERROR,
+        MSG_ID_CAMIF_OVERFLOW,
+        MSG_ID_VIOLATION,
+        MSG_ID_CAMIF_ERROR,
+        MSG_ID_BUS_OVERFLOW,
+        MSG_ID_SOF_ACK,
+};
+
 
 struct stats_buffer {
 	uint8_t awb_ymin;

@@ -239,6 +239,16 @@ ram_console_save_old(struct ram_console_buffer *buffer, const char *bootinfo,
 	}
 }
 
+static int apanic(struct notifier_block *this, unsigned long event,
+                        void *ptr) {
+	mmc_panic_write(ram_console_buffer,256*1024);
+	return NOTIFY_DONE;
+}
+
+static struct notifier_block panic_blk = {
+        .notifier_call  = apanic,
+};
+
 static int __init ram_console_init(struct ram_console_buffer *buffer,
 				   size_t buffer_size, const char *bootinfo,
 				   char *old_buf)
@@ -250,6 +260,8 @@ static int __init ram_console_init(struct ram_console_buffer *buffer,
 	ram_console_buffer = buffer;
 	ram_console_buffer_size =
 		buffer_size - sizeof(struct ram_console_buffer);
+
+	atomic_notifier_chain_register(&panic_notifier_list, &panic_blk);
 
 	if (ram_console_buffer_size > buffer_size) {
 		pr_err("ram_console: buffer %p, invalid size %zu, "

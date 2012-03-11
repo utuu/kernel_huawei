@@ -13,5 +13,9 @@
 		.text
 
 ENTRY(_set_bit)
+ENTRY(_set_bit_le)
 	bitop	orr
 ENDPROC(_set_bit)
+ENDPROC(_set_bit_le)
+
+

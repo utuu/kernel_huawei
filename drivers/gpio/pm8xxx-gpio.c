@@ -434,6 +434,12 @@ int pm8xxx_gpio_config(int gpio, struct pm_gpio *param)
 }
 EXPORT_SYMBOL(pm8xxx_gpio_config);
 
+int pm8058_gpio_config(int gpio, struct pm_gpio *param) {
+	return pm8xxx_gpio_config(gpio,param);
+}
+EXPORT_SYMBOL(pm8058_gpio_config);
+
+
 static struct platform_driver pm_gpio_driver = {
 	.probe		= pm_gpio_probe,
 	.remove		= __devexit_p(pm_gpio_remove),

@@ -1097,7 +1097,7 @@ static int get_phone_version(struct tp_resolution_conversion *tp_resolution_type
     }
     if (machine_is_msm7x30_u8820()
 	  ||machine_is_msm7x30_u8800_51()
-	  ||machine_is_msm8255_u8800_pro())
+	  ||machine_is_msm8255_u8800_pro() ||machine_is_msm7x30_u8800())
     {
         tp_resolution_type->lcd_x = LCD_X_WVGA;
         tp_resolution_type->lcd_y = LCD_Y_WVGA;   
@@ -8048,7 +8048,6 @@ static struct platform_device bcm_wifi_device = {
                 .platform_data = &bcm_wifi_control,
         },
 };
-#endif
 
 static struct platform_device bcm_wifi_device_4330 = {
         /* bcm4330_wlan device */
@@ -8060,6 +8059,7 @@ static struct platform_device bcm_wifi_device_4330 = {
                 .platform_data = &bcm_wifi_control,
         },
 };
+#endif
 
 
 /* add virtual keys fucntion */
@@ -8177,12 +8177,12 @@ static void __init virtualkeys_init(void)
         		   "\n");
     }
     else if ( machine_is_msm7x30_u8800_51()
-		   ||machine_is_msm8255_u8800_pro())
+		   ||machine_is_msm8255_u8800_pro()  || machine_is_msm7x30_u8800())
     {
         buf_vkey_size = sprintf(buf_virtualkey,
         			__stringify(EV_KEY) ":" __stringify(KEY_BACK)  ":67:850:130:80"
         		   ":" __stringify(EV_KEY) ":" __stringify(KEY_MENU)   ":192:850:112:80"
-        		   ":" __stringify(EV_KEY) ":" __stringify(KEY_HOME)   ":309:850:116:80"
+        		   ":" __stringify(EV_KEY) ":" __stringify(KEY_HOMEPAGE)   ":309:850:116:80"
         		   ":" __stringify(EV_KEY) ":" __stringify(KEY_SEARCH) ":424:850:110:80"
         		   "\n");
     }

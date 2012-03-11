@@ -152,6 +152,7 @@ ____atomic_test_and_change_bit(unsigned int bit, volatile unsigned long *p)
  * Native endian assembly bitops.  nr = 0 -> word 0 bit 0.
  */
 extern void _set_bit(int nr, volatile unsigned long * p);
+extern void _set_bit_le(int nr, volatile unsigned long * p);
 extern void _clear_bit(int nr, volatile unsigned long * p);
 extern void _change_bit(int nr, volatile unsigned long * p);
 extern int _test_and_set_bit(int nr, volatile unsigned long * p);

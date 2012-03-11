@@ -137,6 +137,7 @@ EXPORT_SYMBOL(__aeabi_ulcmp);
 
 	/* bitops */
 EXPORT_SYMBOL(_set_bit);
+EXPORT_SYMBOL(_set_bit_le);
 EXPORT_SYMBOL(_test_and_set_bit);
 EXPORT_SYMBOL(_clear_bit);
 EXPORT_SYMBOL(_test_and_clear_bit);

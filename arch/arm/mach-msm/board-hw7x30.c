@@ -1286,6 +1286,12 @@ static struct i2c_board_info msm_camera_boardinfo[] __initdata = {
 		I2C_BOARD_INFO("mt9p017", 0x6D),//i2c real addr is 36.
 	},
 #endif
+#ifdef CONFIG_HUAWEI_SENSOR_S5K4E1GX_P
+        {
+                I2C_BOARD_INFO("s5k4e1gx_p", 0x30 >> 1),
+        },
+#endif 
+
 
 };
 
@@ -1788,6 +1794,42 @@ static struct platform_device msm_camera_sensor_s5k4e1gx = {
 	},
 };
 #endif
+
+#ifdef CONFIG_HUAWEI_SENSOR_S5K4E1GX_P
+static struct msm_camera_sensor_flash_data flash_s5k4e1gx_p = {
+        .flash_type = MSM_CAMERA_FLASH_LED,
+        .flash_src  = &msm_flash_src_pwm
+};
+
+static struct msm_camera_sensor_info msm_camera_sensor_s5k4e1gx_p_data = {
+        .sensor_name    = "s5k4e1gx_p",
+        /*<  DTS2011101302587   yuguangcai 20111013 begin */
+        /*< DTS2011110104318 zhangyu 20111103 begin */
+        .sensor_reset   = 55,
+        /* DTS2011110104318 zhangyu 20111103 end > */
+        /* DTS2011101302587   yuguangcai 20111013 end > */
+        /*.sensor_vreg  = sensor_vreg_array,*/
+        .vreg_num     = ARRAY_SIZE(sensor_vreg_array),
+        .vreg_enable_func = msm_camera_vreg_config_on,
+        .vreg_disable_func = msm_camera_vreg_config_off,
+        .slave_sensor = 0,
+        .sensor_pwd     = 0,
+        .vcm_pwd        = 56,
+        .vcm_enable     = 1,
+        .pdata          = &msm_camera_device_data,
+        .resource       = msm_camera_resources,
+        .flash_data     = &flash_s5k4e1gx_p,
+        .num_resources  = ARRAY_SIZE(msm_camera_resources),
+};
+
+static struct platform_device msm_camera_sensor_s5k4e1gx_p = {
+        .name = "msm_camera_s5k4e1gx_p",
+        .dev = {
+                .platform_data = &msm_camera_sensor_s5k4e1gx_p_data,
+        },
+};
+#endif
+
 
 #ifdef CONFIG_HUAWEI_SENSOR_MT9P017
 static struct msm_camera_sensor_flash_data flash_mt9p017 = {
@@ -6844,6 +6886,11 @@ static struct platform_device *devices[] __initdata = {
 #ifdef CONFIG_HUAWEI_SENSOR_S5K4E1GX
 	&msm_camera_sensor_s5k4e1gx,
 #endif
+
+#ifdef CONFIG_HUAWEI_SENSOR_S5K4E1GX_P
+        &msm_camera_sensor_s5k4e1gx_p,
+#endif
+
 #ifdef CONFIG_HUAWEI_SENSOR_MT9P017
 	&msm_camera_sensor_mt9p017,
 #endif
@@ -6868,6 +6915,7 @@ static struct platform_device *devices[] __initdata = {
 #ifdef CONFIG_SN12M0PZ
 	&msm_camera_sensor_sn12m0pz,
 #endif
+
 	&msm_device_vidc_720p,
 #ifdef CONFIG_MSM_GEMINI
 	&msm_gemini_device,
@@ -8890,8 +8938,8 @@ static void __init msm7x30_init(void)
 #endif
 	msm7x30_init_mmc();
 	/* removed several lines */
-	(void)lcdc_sharp_panel_device;
-	(void)msm_camera_sensor_mt9e013;
+//	(void)lcdc_sharp_panel_device;
+//	(void)msm_camera_sensor_mt9e013;
 	msm_qsd_spi_init();
 
 #ifdef CONFIG_SPI_QSD

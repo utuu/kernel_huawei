@@ -89,6 +89,13 @@ config HUAWEI_SENSOR_S5K4E1GX
 	default y
 	---help---
 	  MICRON 5M Bayer Sensor with AutoFocus
+
+config HUAWEI_SENSOR_S5K4E1GX_P
+	bool "Sensor s5k4e1gx_p (BAYER 5M)"
+	depends on HUAWEI_CAMERA
+	default y
+	---help---
+	  MICRON 5M Bayer Sensor with AutoFocus
 	  
 config HUAWEI_SENSOR_MT9P017
 	bool "Sensor s5k4e1gx (BAYER 5M)"

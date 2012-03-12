@@ -10,6 +10,7 @@ ifeq ($(CONFIG_MSM_CAMERA_V4L2),y)
 else
   obj-$(CONFIG_MSM_CAMERA) += msm_camera.o
 endif
+EXTRA_CFLAGS += -DDEBUG
 obj-$(CONFIG_MSM_CAMERA) += msm_axi_qos.o gemini/
 obj-$(CONFIG_MSM_CAMERA_FLASH) += flash.o
 obj-$(CONFIG_HUAWEI_FEATURE_TPS61310) += tps61310.o

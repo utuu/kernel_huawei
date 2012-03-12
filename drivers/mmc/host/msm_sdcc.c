@@ -58,7 +58,7 @@
 #include "msm_sdcc.h"
 #include "msm_sdcc_dml.h"
 
-#define SDCC_WIFI_SLOT		3
+#define SDCC_WIFI_SLOT		-1
 
 #define DRIVER_NAME "msm-sdcc"
 

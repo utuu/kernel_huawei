@@ -14,7 +14,7 @@
  *
  */
 
-#include <linux/module.h>
+#include <linux/module.h> 
 #include <linux/delay.h>
 #include <linux/earlysuspend.h>
 #include <linux/hrtimer.h>
@@ -564,27 +564,30 @@ static enum hrtimer_restart aps_timer_func(struct hrtimer *timer)
 	return HRTIMER_NORESTART;
 }
 
-static int aps_12d_probe(
-	
-	struct i2c_client *client, const struct i2c_device_id *id)
+static int aps_12d_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {	
 	int ret;
 	struct aps_data *aps;
 	/*the aps_12d sensors ispower on*/
-    /* updated for regulator interface */
+	/* updated for regulator interface */
 	struct regulator *vreg_gp4=NULL;
 	int rc;
 	int i;
+	int gpio_config;
+        
+	ret = gpio_request(130, "gpio 130 for aps12d");
+	gpio_config = GPIO_CFG(130, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA);
+	ret = gpio_tlmm_config(gpio_config, GPIO_CFG_ENABLE);
+	ret = gpio_direction_output(130,0);
 	
-    vreg_gp4 = regulator_get(NULL, VREG_GP4_NAME);
-    if (IS_ERR(vreg_gp4)) 
-    {
-	    pr_err("%s:gp4 power init get failed\n", __func__);
-    }
+	vreg_gp4 = regulator_get(NULL, VREG_GP4_NAME);
+	if (IS_ERR(vreg_gp4)) 
+	{
+		pr_err("%s:gp4 power init get failed\n", __func__);
+	}
+	/* set gp4 voltage as 2700mV for all */
+	rc = regulator_set_voltage(vreg_gp4,VREG_GP4_VOLTAGE_VALUE_2700*1000,VREG_GP4_VOLTAGE_VALUE_2700*1000);
 
-    /* set gp4 voltage as 2700mV for all */
-    rc = regulator_set_voltage(vreg_gp4,VREG_GP4_VOLTAGE_VALUE_2700*1000,VREG_GP4_VOLTAGE_VALUE_2700*1000);
-    
 	if (rc) {
 		PROXIMITY_DEBUG("%s: vreg_gp4  vreg_set_level failed \n", __func__);
 		return rc;
@@ -602,7 +605,7 @@ static int aps_12d_probe(
 	}
 
 	/* if querry the board is T1 or T2 turn off the proximity */
-    /* This modification for version A&B of U8800,only */
+	/* This modification for version A&B of U8800,only */
 	if((machine_is_msm7x30_u8800())&&((get_hw_sub_board_id() == HW_VER_SUB_VA) || ((get_hw_sub_board_id() == HW_VER_SUB_VB))))
 	{
 		printk(KERN_ERR "aps_12d_probe: aps is not supported in U8800 and U8800 T1 board!\n");
@@ -713,10 +716,10 @@ static int aps_12d_probe(
 	
 	this_aps_data =aps;
 
-    #ifdef CONFIG_HUAWEI_HW_DEV_DCT
-    /* detect current device successful, set the flag as present */
-    set_hw_dev_flag(DEV_I2C_APS);
-    #endif
+	#ifdef CONFIG_HUAWEI_HW_DEV_DCT
+	/* detect current device successful, set the flag as present */
+	set_hw_dev_flag(DEV_I2C_APS);
+	#endif
 
 	printk(KERN_INFO "aps_12d_probe: Start Proximity Sensor APS-12D\n");
 

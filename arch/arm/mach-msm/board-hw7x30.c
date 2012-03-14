@@ -501,6 +501,7 @@ static int pm8058_gpios_init(void)
 	|| (machine_is_msm8255_u8800_pro()))
 	{
 		/* SCD4 gpio */
+		printk("pm8xxx_gpio_config PMIC_GPIO_SDC4_EN_N\n");
 		rc = pm8xxx_gpio_config(sdc4_en.gpio, &sdc4_en.config);
 		if (rc) {
 			pr_err("%s PMIC_GPIO_SDC4_EN_N config failed\n",
@@ -4547,6 +4548,7 @@ static void msm_hsusb_vbus_power(unsigned phy_info, int on)
 		},
 	};
 
+	printk("msm_hsusb_vbus_power %d\n",on);
         /* If VBUS is already on (or off), do nothing. */
         if (unlikely(on == vbus_is_on))
                 return;

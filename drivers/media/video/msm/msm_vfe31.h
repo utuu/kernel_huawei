@@ -321,10 +321,10 @@ enum  vfe_recording_state {
 #define V31_OUT_CLAMP_OFF         0x00000524
 #define V31_OUT_CLAMP_LEN         8
 
-#define V31_OPERATION_CFG_LEN     32
+#define V31_OPERATION_CFG_LEN     28
 
 #define V31_AXI_OUT_OFF           0x00000038
-#define V31_AXI_OUT_LEN           212
+#define V31_AXI_OUT_LEN           188
 #define V31_AXI_CH_INF_LEN        24
 #define V31_AXI_CFG_LEN           47
 

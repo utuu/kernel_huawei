@@ -2756,6 +2756,8 @@ static long msm_ioctl_common(struct msm_cam_device *pmsm,
 		unsigned int cmd,
 		void __user *argp)
 {
+	CDBG("%s cmd = %d\n", __func__, cmd);
+	mdelay(40);
 	switch (cmd) {
 	case MSM_CAM_IOCTL_REGISTER_PMEM:
 		CDBG("%s cmd = MSM_CAM_IOCTL_REGISTER_PMEM\n", __func__);
@@ -2781,6 +2783,8 @@ static long msm_ioctl_config(struct file *filep, unsigned int cmd,
 	struct msm_cam_device *pmsm = filep->private_data;
 
 	CDBG("%s: cmd %d\n", __func__, _IOC_NR(cmd));
+	mdelay(40);
+
 
 	switch (cmd) {
 	case MSM_CAM_IOCTL_GET_SENSOR_INFO:
@@ -2964,7 +2968,8 @@ static long msm_ioctl_frame(struct file *filep, unsigned int cmd,
 	int rc = -EINVAL;
 	void __user *argp = (void __user *)arg;
 	struct msm_cam_device *pmsm = filep->private_data;
-
+	CDBG("%s cmd = %d\n", __func__, cmd);
+	mdelay(40);
 
 	switch (cmd) {
 	case MSM_CAM_IOCTL_GETFRAME:
@@ -3019,6 +3024,9 @@ static long msm_ioctl_control(struct file *filep, unsigned int cmd,
 	void __user *argp = (void __user *)arg;
 	struct msm_control_device *ctrl_pmsm = filep->private_data;
 	struct msm_cam_device *pmsm = ctrl_pmsm->pmsm;
+	CDBG("%s cmd = %d\n", __func__, cmd);
+	mdelay(40);
+
 
 	switch (cmd) {
 	case MSM_CAM_IOCTL_CTRL_COMMAND:

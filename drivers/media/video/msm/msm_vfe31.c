@@ -1026,7 +1026,7 @@ static int vfe31_operation_config(uint32_t *cmd)
 		FALSE : TRUE;
 
 	vfe31_ctrl->stats_comp = *(++p);
-	vfe31_ctrl->hfr_mode = *(++p);
+	vfe31_ctrl->hfr_mode = 0; //*(++p);
 
 	msm_io_w(*(++p), vfe31_ctrl->vfebase + VFE_CFG_OFF);
 	msm_io_w(*(++p), vfe31_ctrl->vfebase + VFE_MODULE_CFG);

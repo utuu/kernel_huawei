@@ -22,6 +22,7 @@
 #include <linux/uaccess.h>
 #include <linux/io.h>
 #include <linux/platform_data/ram_console.h>
+#include <linux/mmc/mmc_panic.h>
 
 #ifdef CONFIG_ANDROID_RAM_CONSOLE_ERROR_CORRECTION
 #include <linux/rslib.h>
@@ -241,7 +242,7 @@ ram_console_save_old(struct ram_console_buffer *buffer, const char *bootinfo,
 
 static int apanic(struct notifier_block *this, unsigned long event,
                         void *ptr) {
-	mmc_panic_write(ram_console_buffer,256*1024);
+	mmc_panic_write((u8 *)ram_console_buffer,256*1024);
 	return NOTIFY_DONE;
 }
 
@@ -367,7 +368,7 @@ static int ram_console_driver_probe(struct platform_device *pdev)
 	start = res->start;
 	printk(KERN_INFO "ram_console: got buffer at %zx, size %zx\n",
 	       start, buffer_size);
-	buffer = ioremap(res->start, buffer_size);
+	buffer = (void *)(res->start); //ioremap(res->start, buffer_size);
 	if (buffer == NULL) {
 		printk(KERN_ERR "ram_console: failed to map memory\n");
 		return -ENOMEM;

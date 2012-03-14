@@ -1446,10 +1446,8 @@ static int mmc_blk_probe(struct mmc_card *card)
 	}
 
 #ifdef CONFIG_HUAWEI_KERNEL
-#ifdef CONFIG_APANIC
     if (!strcmp(md->disk->disk_name, "mmcblk0"))
         mmc_panic_save_card(card);
-#endif
 #endif
 	return 0;
 

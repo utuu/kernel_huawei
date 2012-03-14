@@ -6818,11 +6818,6 @@ static struct platform_device *devices[] __initdata = {
 	&smsc911x_device,
 	&msm_device_nand,
         &ram_console_device,
-#ifdef CONFIG_USB_FUNCTION
-	&msm_device_hsusb_peripheral,
-	&mass_storage_device,
-#endif
->>>>>>> d368b07... Fix acpu fixup and fail to add ram console.
 #ifdef CONFIG_USB_MSM_OTG_72K
 	&msm_device_otg,
 #ifdef CONFIG_USB_GADGET
@@ -9209,58 +9204,14 @@ static void __init msm7x30_allocate_memory_regions(void)
 	msm_fb_resources[0].end = msm_fb_resources[0].start + size - 1;
 	pr_info("allocating %lu bytes at %p (%lx physical) for fb\n",
 		size, addr, __pa(addr));
-<<<<<<< HEAD
-=======
 
-
-	size = pmem_audio_size;
-	if (size) {
-		addr = alloc_bootmem(size);
-		android_pmem_audio_pdata.start = __pa(addr);
-		android_pmem_audio_pdata.size = size;
-		pr_info("allocating %lu bytes at %p (%lx physical) for audio "
-			"pmem arena\n", size, addr, __pa(addr));
-	}
-
-	size = pmem_kernel_ebi1_size;
-	if (size) {
-		addr = alloc_bootmem_aligned(size, 0x100000);
-		android_pmem_kernel_ebi1_pdata.start = __pa(addr);
-		android_pmem_kernel_ebi1_pdata.size = size;
-		pr_info("allocating %lu bytes at %p (%lx physical) for kernel"
-			" ebi1 pmem arena\n", size, addr, __pa(addr));
-	}
-
-	size = pmem_sf_size;
-	if (size) {
-		addr = alloc_bootmem(size);
-		android_pmem_pdata.start = __pa(addr);
-		android_pmem_pdata.size = size;
-		pr_info("allocating %lu bytes at %p (%lx physical) for sf "
-			"pmem arena\n", size, addr, __pa(addr));
-	}
-
-	if machine_is_msm7x30_fluid()
-		size = fluid_pmem_adsp_size;
-	else
-		size = pmem_adsp_size;
-	if (size) {
-		addr = alloc_bootmem(size);
-		android_pmem_adsp_pdata.start = __pa(addr);
-		android_pmem_adsp_pdata.size = size;
-		pr_info("allocating %lu bytes at %p (%lx physical) for adsp "
-			"pmem arena\n", size, addr, __pa(addr));
-	}
-/* looks like all ram is zeroed on boot so this can't work. */
-/*
 	size = MSM_RAM_CONSOLE_SIZE;
         addr = alloc_bootmem(size);
-        ram_console_resources[0].start=0x10000000-MSM_RAM_CONSOLE_SIZE; //__pa(addr);
+        ram_console_resources[0].start=(int)addr; //__pa(addr);
         ram_console_resources[0].end =ram_console_resources[0].start + size - 1;
         pr_info("allocating %lu bytes at %p (%lx physical) for ram_console\n",
                 size, addr, __pa(addr));
-*/
->>>>>>> d368b07... Fix acpu fixup and fail to add ram console.
+
 }
 
 static void __init msm7x30_map_io(void)

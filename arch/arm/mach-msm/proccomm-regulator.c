@@ -62,6 +62,7 @@ static int _vreg_set_level(int vreg_id, int level_mV)
 	unsigned _level		= (unsigned)level_mV;
 	int	 rc;
 
+	printk("vreg_set_level(%d,%d)\n",vreg_id,level_mV);
 	rc = msm_proc_comm(PCOM_VREG_SET_LEVEL, &_id, &_level);
 
 	if (rc)

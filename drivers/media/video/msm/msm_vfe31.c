@@ -629,21 +629,21 @@ static inline void vfe31_reset_free_buf_queue(
 	vfe31_reset_free_buf_queue(&vfe31_ctrl->outpath.out2);	\
 } while (0)
 
+#if 0
 static int vfe31_config_axi(int mode, struct axidata *ad, uint32_t *ao)
 {
 	int i;
-	uint32_t *p, *p1, *p2, *p3;
+	uint32_t *p, *p1, *p2;
 	int32_t *ch_info;
 	struct vfe31_output_ch *outp1, *outp2, *outp3;
 	struct msm_pmem_region *regp1 = NULL;
 	struct msm_pmem_region *regp2 = NULL;
-	struct msm_pmem_region *regp3 = NULL;
+
 	int ret;
 	struct msm_sync* p_sync = (struct msm_sync *)vfe_syncdata;
 
 	outp1 = NULL;
 	outp2 = NULL;
-	outp3 = NULL;
 
 	p = ao + 2;
 
@@ -911,6 +911,195 @@ static int vfe31_config_axi(int mode, struct axidata *ad, uint32_t *ao)
 
 	return 0;
 }
+#endif
+
+static int vfe31_config_axi(int mode, struct axidata *ad, uint32_t *ao)
+{
+        int i, ret;
+        uint32_t *p, *p1, *p2;
+        struct vfe31_output_ch *outp1, *outp2;
+        struct msm_pmem_region *regp1 = NULL;
+        struct msm_pmem_region *regp2 = NULL;
+
+        outp1 = NULL;
+        outp2 = NULL;
+
+        p = ao + 2;
+
+        CDBG("vfe31_config_axi: mode = %d, bufnum1 = %d, bufnum2 = %d\n",
+                mode, ad->bufnum1, ad->bufnum2);
+
+        switch (mode) {
+
+        case OUTPUT_2: {
+                if (ad->bufnum2 != 3)
+                        return -EINVAL;
+                *p = 0x200;    /* preview with wm0 & wm1 */
+
+                vfe31_ctrl->outpath.out0.ch0 = 0; /* luma   */
+                vfe31_ctrl->outpath.out0.ch1 = 1; /* chroma */
+                regp1 = &(ad->region[ad->bufnum1]);
+                outp1 = &(vfe31_ctrl->outpath.out0);
+                vfe31_ctrl->outpath.output_mode |= VFE31_OUTPUT_MODE_PT;
+
+                for (i = 0; i < 2; i++) {
+                        p1 = ao + 6 + i;    /* wm0 for y  */
+                        *p1 = (regp1->paddr + regp1->info.y_off);
+
+                        p1 = ao + 12 + i;  /* wm1 for cbcr */
+                        *p1 = (regp1->paddr + regp1->info.cbcr_off);
+                        regp1++;
+                }
+		ret = vfe31_add_free_buf(outp1, regp1);
+
+/*                CDBG("vfe31_config_axi: free_buf paddr = 0x%x, y_off = %d,"
+                        " cbcr_off = %d\n",
+                        outp1->free_buf.paddr, outp1->free_buf.y_off,
+                        outp1->free_buf.cbcr_off);
+*/
+        }
+                break;
+
+        case OUTPUT_1_AND_2:
+                /* use wm0& 4 for thumbnail, wm1&5 for main image.*/
+                if ((ad->bufnum1 < 1) || (ad->bufnum2 < 1))
+                        return -EINVAL;
+                /* at least one frame for snapshot.  */
+                *p++ = 0x1;    /* xbar cfg0 */
+                vfe31_ctrl->outpath.out0.ch0 = 0; /* thumbnail luma   */
+                vfe31_ctrl->outpath.out0.ch1 = 4; /* thumbnail chroma */
+                vfe31_ctrl->outpath.out1.ch0 = 1; /* main image luma   */
+                vfe31_ctrl->outpath.out1.ch1 = 5; /* main image chroma */
+                vfe31_ctrl->outpath.output_mode |=
+                        VFE31_OUTPUT_MODE_S;  /* main image.*/
+                vfe31_ctrl->outpath.output_mode |=
+                        VFE31_OUTPUT_MODE_PT;  /* thumbnail. */
+
+                regp1 = &(ad->region[0]); /* this is thumbnail buffer. */
+                /* this is main image buffer. */
+                regp2 = &(ad->region[ad->bufnum1]);
+                outp1 = &(vfe31_ctrl->outpath.out0);
+                outp2 = &(vfe31_ctrl->outpath.out1); /* snapshot */
+
+                /*  Parse the buffers!!! */
+                if (ad->bufnum2 == 1) { /* assuming bufnum1 = bufnum2 */
+                        p1 = ao + 6;   /* wm0 ping */
+                        *p1++ = (regp1->paddr + regp1->info.y_off);
+                        /* this is to duplicate ping address to pong.*/
+                        *p1 = (regp1->paddr + regp1->info.y_off);
+                        p1 = ao + 30;  /* wm4 ping */
+                        *p1++ = (regp1->paddr + regp1->info.cbcr_off);
+                        /* this is to duplicate ping address to pong.*/
+                        *p1 = (regp1->paddr + regp1->info.cbcr_off);
+                        p1 = ao + 12;   /* wm1 ping */
+                        *p1++ = (regp2->paddr + regp2->info.y_off);
+                        /* pong = ping,*/
+                        *p1 = (regp2->paddr + regp2->info.y_off);
+                        p1 = ao + 36;  /* wm5 */
+                        *p1++ = (regp2->paddr + regp2->info.cbcr_off);
+                        *p1 = (regp2->paddr + regp2->info.cbcr_off);
+
+                } else { /* more than one snapshot */
+                        /* first fill ping & pong */
+                        for (i = 0; i < 2; i++) {
+                                p1 = ao + 6 + i;    /* wm0 for y  */
+                                *p1 = (regp1->paddr + regp1->info.y_off);
+                                p1 = ao + 30 + i;  /* wm4 for cbcr */
+                                *p1 = (regp1->paddr + regp1->info.cbcr_off);
+                                regp1++;
+                        }
+
+                        for (i = 0; i < 2; i++) {
+                                p2 = ao + 12 + i;    /* wm1 for y  */
+                                *p2 = (regp2->paddr + regp2->info.y_off);
+                                p2 = ao + 36 + i;  /* wm5 for cbcr */
+                                *p2 = (regp2->paddr + regp2->info.cbcr_off);
+                                regp2++;
+                        }
+
+                        if (ad->bufnum2 == 3) { /* 3 maximum to begin with. */
+				ret = vfe31_add_free_buf(outp1, regp1);
+
+				ret = vfe31_add_free_buf(outp2, regp2);
+                        }
+                }
+                break;
+
+         case OUTPUT_1_AND_3: {
+                /* use wm0& 4 for preview, wm1&5 for video.*/
+                if ((ad->bufnum1 < 2) || (ad->bufnum2 < 2))
+                        return -EINVAL;
+
+#ifdef CONFIG_MSM_CAMERA_V4L2
+                *p++ = 0x1;    /* xbar cfg0 */
+                *p = 0x1a03;    /* xbar cfg1 */
+#endif
+                vfe31_ctrl->outpath.out0.ch0 = 0; /* preview luma   */
+                vfe31_ctrl->outpath.out0.ch1 = 4; /* preview chroma */
+                vfe31_ctrl->outpath.out2.ch0 = 1; /* video luma     */
+                vfe31_ctrl->outpath.out2.ch1 = 5; /* video chroma   */
+                vfe31_ctrl->outpath.output_mode |=
+                        VFE31_OUTPUT_MODE_V;  /* video*/
+                vfe31_ctrl->outpath.output_mode |=
+                        VFE31_OUTPUT_MODE_PT;  /* preview */
+
+                regp1 = &(ad->region[0]); /* this is preview buffer. */
+                regp2 = &(ad->region[ad->bufnum1]);/* this is video buffer. */
+                outp1 = &(vfe31_ctrl->outpath.out0); /* preview */
+                outp2 = &(vfe31_ctrl->outpath.out2); /* video */
+
+
+                for (i = 0; i < 2; i++) {
+                        p1 = ao + 6 + i;    /* wm0 for y  */
+                        *p1 = (regp1->paddr + regp1->info.y_off);
+
+                        p1 = ao + 30 + i;  /* wm1 for cbcr */
+                        *p1 = (regp1->paddr + regp1->info.cbcr_off);
+                        regp1++;
+                }
+
+                for (i = 0; i < 2; i++) {
+                        p2 = ao + 12 + i;    /* wm0 for y  */
+                        *p2 = (regp2->paddr + regp2->info.y_off);
+
+                        p2 = ao + 36 + i;  /* wm1 for cbcr */
+                        *p2 = (regp2->paddr + regp2->info.cbcr_off);
+                        regp2++;
+                }
+ret = vfe31_add_free_buf(outp1, regp1);
+ret = vfe31_add_free_buf(outp2, regp2);
+/*                CDBG("vfe31_config_axi: preview free_buf"
+                        "paddr = 0x%x, y_off = %d,"
+                        " cbcr_off = %d\n",
+                        outp1->free_buf.paddr, outp1->free_buf.y_off,
+                        outp1->free_buf.cbcr_off);
+                CDBG("vfe31_config_axi: video free_buf"
+                        "paddr = 0x%x,y_off = %d,"
+                        " cbcr_off = %d\n",
+                        outp2->free_buf.paddr, outp2->free_buf.y_off,
+                        outp2->free_buf.cbcr_off);
+*/
+                }
+                break;
+        case CAMIF_TO_AXI_VIA_OUTPUT_2: {  /* use wm0 only */
+                if (ad->bufnum2 < 1)
+                        return -EINVAL;
+                CDBG("config axi for raw snapshot.\n");
+                *p = 0x60;    /* raw snapshot with wm0 */
+                vfe31_ctrl->outpath.out1.ch0 = 0; /* raw */
+                regp1 = &(ad->region[ad->bufnum1]);
+                vfe31_ctrl->outpath.output_mode |= VFE31_OUTPUT_MODE_S;
+                p1 = ao + 6;    /* wm0 for y  */
+                *p1 = (regp1->paddr + regp1->info.y_off);
+                }
+                break;
+        default:
+                break;
+        }
+        msm_io_memcpy(vfe31_ctrl->vfebase + vfe31_cmd[V31_AXI_OUT_CFG].offset,
+                ao, vfe31_cmd[V31_AXI_OUT_CFG].length);
+        return 0;
+}
 
 static void vfe31_reset_internal_variables(void)
 {
@@ -1026,7 +1215,7 @@ static int vfe31_operation_config(uint32_t *cmd)
 		FALSE : TRUE;
 
 	vfe31_ctrl->stats_comp = *(++p);
-	vfe31_ctrl->hfr_mode = 0; //*(++p);
+	vfe31_ctrl->hfr_mode = HFR_MODE_OFF; //*(++p);
 
 	msm_io_w(*(++p), vfe31_ctrl->vfebase + VFE_CFG_OFF);
 	msm_io_w(*(++p), vfe31_ctrl->vfebase + VFE_MODULE_CFG);
@@ -2697,6 +2886,7 @@ static void vfe31_process_camif_sof_irq(void)
 		CDBG("Skip the SOF notification when HFR enabled\n");
 		return;
 	}
+
 	vfe31_send_msg_no_payload(MSG_ID_SOF_ACK);
 	vfe31_ctrl->vfeFrameId++;
 	CDBG("camif_sof_irq, frameId = %d\n", vfe31_ctrl->vfeFrameId);

@@ -141,7 +141,6 @@ static int vpe_reset(void)
 	vpe_reset_state_variables();
 	vpe_version = msm_io_r(vpe_device->vpebase + VPE_HW_VERSION_OFFSET);
 	CDBG("vpe_version = 0x%x\n", vpe_version);
-
 	/* disable all interrupts.*/
 	msm_io_w(0, vpe_device->vpebase + VPE_INTR_ENABLE_OFFSET);
 	/* clear all pending interrupts*/
@@ -149,7 +148,7 @@ static int vpe_reset(void)
 
 	/* write sw_reset to reset the core. */
 	msm_io_w(0x10, vpe_device->vpebase + VPE_SW_RESET_OFFSET);
-
+	
 	/* then poll the reset bit, it should be self-cleared. */
 	while (1) {
 		rc =
@@ -1056,7 +1055,7 @@ void msm_vpe_offset_update(int frame_pack, uint32_t pyaddr, uint32_t pcbcraddr,
 	vpe_update_scaler_with_dis(&(vpe_buf.vpe_crop),
 		&(vpe_ctrl->dis_offset));
 
-	msm_send_frame_to_vpe(pyaddr, pcbcraddr, ts, output_id);
+	msm_send_frame_to_vpe(pyaddr, pcbcraddr, ts,  output_id);
 }
 
 static void vpe_send_outmsg(uint8_t msgid, uint32_t pyaddr,
@@ -1276,6 +1275,8 @@ int msm_vpe_open(void)
 		pr_err("%s: no memory!\n", __func__);
 		return -ENOMEM;
 	}
+
+	vpe_enable(VPE_NORMAL_MODE_CLOCK_RATE);
 
 	spin_lock_init(&vpe_ctrl->ops_lock);
 	CDBG("%s: Out\n", __func__);

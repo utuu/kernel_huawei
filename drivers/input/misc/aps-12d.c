@@ -573,12 +573,13 @@ static int aps_12d_probe(struct i2c_client *client, const struct i2c_device_id *
 	struct regulator *vreg_gp4=NULL;
 	int rc=0;
 	int i;
-	int gpio_config;
+/*	int gpio_config;
         
 	ret = gpio_request(130, "gpio 130 for aps12d");
 	gpio_config = GPIO_CFG(130, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA);
 	ret = gpio_tlmm_config(gpio_config, GPIO_CFG_ENABLE);
-	ret = gpio_direction_output(130,0);
+	ret = gpio_direction_output(130,1);
+*/
 	
 	vreg_gp4 = regulator_get(NULL, VREG_GP4_NAME);
 	if (IS_ERR(vreg_gp4)) 
@@ -586,18 +587,18 @@ static int aps_12d_probe(struct i2c_client *client, const struct i2c_device_id *
 		pr_err("%s:gp4 power init get failed\n", __func__);
 	}
 	/* set gp4 voltage as 2700mV for all */
-//	rc = regulator_set_voltage(vreg_gp4,VREG_GP4_VOLTAGE_VALUE_2700*1000,VREG_GP4_VOLTAGE_VALUE_2700*1000);
+	rc = regulator_set_voltage(vreg_gp4,VREG_GP4_VOLTAGE_VALUE_2700*1000,VREG_GP4_VOLTAGE_VALUE_2700*1000);
 
 	if (rc) {
 		PROXIMITY_DEBUG("%s: vreg_gp4  vreg_set_level failed \n", __func__);
 		return rc;
 	}
-//	rc = regulator_enable(vreg_gp4);
+	rc = regulator_enable(vreg_gp4);
 	if (rc) {
 		pr_err("%s: vreg_gp4    vreg_enable failed \n", __func__);
 		return rc;
 	}
-	mdelay(5);
+	mdelay(15);
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
 		PROXIMITY_DEBUG(KERN_ERR "aps_12d_probe: need I2C_FUNC_I2C\n");
 		ret = -ENODEV;
@@ -741,7 +742,7 @@ err_check_functionality_failed:
 	{
         /* can't use the flag ret here, it will change the return value of probe function */
         /* updated for regulator interface */
-//        regulator_disable(vreg_gp4);
+        regulator_disable(vreg_gp4);
         /* delete a line */
 	}
 	return ret;

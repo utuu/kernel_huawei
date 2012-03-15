@@ -2659,12 +2659,12 @@ static int msm_put_st_frame(struct msm_sync *sync, void __user *arg)
 				stereo_frame_half.buf_info.fd,
 				0); /* Do not change the active flag. */
 
-			sync->vpefn.vpe_cfg_offset(stereo_frame_half.packing,
+/*			sync->vpefn.vpe_cfg_offset(stereo_frame_half.packing,
 				st_pphy + stereo_frame_half.R.buf_y_off,
 				st_pphy + stereo_frame_half.R.buf_cbcr_off,
 				NULL, OUTPUT_TYPE_ST_R, stereo_frame_half.R,
 				stereo_frame_half.frame_id);
-
+*/
 			spin_unlock_irqrestore(&st_frame_spinlock, flags);
 		} else {
 			CDBG("%s: Invalid Msg\n", __func__);
@@ -2757,7 +2757,6 @@ static long msm_ioctl_common(struct msm_cam_device *pmsm,
 		void __user *argp)
 {
 	CDBG("%s cmd = %d\n", __func__, cmd);
-	mdelay(40);
 	switch (cmd) {
 	case MSM_CAM_IOCTL_REGISTER_PMEM:
 		CDBG("%s cmd = MSM_CAM_IOCTL_REGISTER_PMEM\n", __func__);
@@ -2783,8 +2782,6 @@ static long msm_ioctl_config(struct file *filep, unsigned int cmd,
 	struct msm_cam_device *pmsm = filep->private_data;
 
 	CDBG("%s: cmd %d\n", __func__, _IOC_NR(cmd));
-	mdelay(40);
-
 
 	switch (cmd) {
 	case MSM_CAM_IOCTL_GET_SENSOR_INFO:
@@ -2969,7 +2966,6 @@ static long msm_ioctl_frame(struct file *filep, unsigned int cmd,
 	void __user *argp = (void __user *)arg;
 	struct msm_cam_device *pmsm = filep->private_data;
 	CDBG("%s cmd = %d\n", __func__, cmd);
-	mdelay(40);
 
 	switch (cmd) {
 	case MSM_CAM_IOCTL_GETFRAME:
@@ -3025,7 +3021,6 @@ static long msm_ioctl_control(struct file *filep, unsigned int cmd,
 	struct msm_control_device *ctrl_pmsm = filep->private_data;
 	struct msm_cam_device *pmsm = ctrl_pmsm->pmsm;
 	CDBG("%s cmd = %d\n", __func__, cmd);
-	mdelay(40);
 
 
 	switch (cmd) {

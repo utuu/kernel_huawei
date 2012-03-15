@@ -303,11 +303,11 @@ struct msm_camvpe_fn {
 	int (*vpe_reg)(struct msm_vpe_callback *);
 	int (*vpe_cfg_update) (void *);
 	void (*send_frame_to_vpe) (uint32_t y_phy, uint32_t cbcr_phy,
-		struct timespec *ts, int output_id);
+		struct timespec *ts , int output_id);
 	int (*vpe_config)(struct msm_vpe_cfg_cmd *, void *);
 	void (*vpe_cfg_offset)(int frame_pack, uint32_t pyaddr,
 		uint32_t pcbcraddr, struct timespec *ts, int output_id,
-		struct msm_st_half st_half, int frameid);
+		struct msm_st_half st_half, int frameid); 
 	int *dis;
 };
 

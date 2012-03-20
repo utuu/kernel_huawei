@@ -45,7 +45,7 @@
 #ifdef PROXIMITY_DB
 #define PROXIMITY_DEBUG(fmt, args...) printk(KERN_INFO fmt, ##args)
 #else
-#define PROXIMITY_DEBUG(fmt, args...)
+#define PROXIMITY_DEBUG(fmt, args...) APS_DBG(fmt, ##args)
 #endif
 
 #ifndef abs

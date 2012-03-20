@@ -53,7 +53,7 @@ static signed short st_sensor_data[3];
 
 extern int st303_dev_id;
 
-extern struct input_dev *sensor_dev;
+struct input_dev *sensor_dev=NULL;
 
 enum st303_reg {
 	

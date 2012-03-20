@@ -7786,7 +7786,7 @@ static struct mmc_platform_data msm7x30_sdc3_data = {
 #ifdef CONFIG_MMC_MSM_SDIO_SUPPORT
 #ifdef CONFIG_HUAWEI_KERNEL
 	/* disable sdiowakeup_irq  */
-	/*.sdiowakeup_irq = MSM_GPIO_TO_INT(118),*/
+	.sdiowakeup_irq = MSM_GPIO_TO_INT(118),
 #endif
 #endif
 #ifdef CONFIG_MMC_MSM_SDC3_DUMMY52_REQUIRED
@@ -8880,6 +8880,34 @@ static struct i2c_board_info cy8ctma300_board_info[] = {
 	}
 };
 
+void __init config_wifi_for_low_consume(void)
+{
+        
+        int rc;
+        struct  regulator *vreg_wlan2 = NULL;
+        vreg_wlan2 = regulator_get(NULL, "wlan2");
+        if (IS_ERR(vreg_wlan2)) {
+                printk(KERN_ERR "%s: vreg_get failed wlan2\n",
+                        __func__);
+                return;
+        }
+
+        // Power up 2.5v Analog
+        rc = regulator_set_voltage(vreg_wlan2, 2500*1000, 2500*1000);
+        rc = regulator_enable(vreg_wlan2);
+        
+        msleep(10);
+
+   //shut down this power after WIFI is initialised.   
+
+        rc = regulator_disable(vreg_wlan2);
+        if (rc) {
+                printk(KERN_ERR "%s: vreg_disable failed vreg_wlan2\n",
+                        __func__);
+        }
+}
+
+
 static void __init msm7x30_init(void)
 {
 	int rc;
@@ -8964,6 +8992,7 @@ static void __init msm7x30_init(void)
 //	(void)msm_camera_sensor_mt9e013;
 	msm_qsd_spi_init();
 
+/*
 #ifdef CONFIG_SPI_QSD
 	if (machine_is_msm7x30_fluid())
 		spi_register_board_info(lcdc_sharp_spi_board_info,
@@ -8976,6 +9005,7 @@ static void __init msm7x30_init(void)
 	atv_dac_power_init();
 	sensors_ldo_init();
 	hdmi_init_regs();
+*/
 	msm_fb_add_devices();
 	msm_pm_set_platform_data(msm_pm_data, ARRAY_SIZE(msm_pm_data));
 	BUG_ON(msm_pm_boot_init(MSM_PM_BOOT_CONFIG_RESET_VECTOR,
@@ -9063,7 +9093,7 @@ static void __init msm7x30_init(void)
 		i2c_register_board_info(0, cy8ctma300_board_info,
 			ARRAY_SIZE(cy8ctma300_board_info));
 	}
-
+	config_wifi_for_low_consume();
 	if (machine_is_msm8x55_svlte_surf() || machine_is_msm8x55_svlte_ffa()) {
 		rc = gpio_tlmm_config(usb_hub_gpio_cfg_value, GPIO_CFG_ENABLE);
 		if (rc)

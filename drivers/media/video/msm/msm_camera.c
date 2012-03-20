@@ -1299,26 +1299,24 @@ static int msm_get_stats(struct msm_sync *sync, void __user *arg)
 			se.stats_event.len,
 			se.stats_event.msg_id);
 
-#if 0
+//#if 0
 		if (data->type == VFE_MSG_COMMON) {
-			stats.status_bits = data->stats_msg.status_bits;
-			stats.awb_ymin = data->stats_msg.awb_ymin;
+//			stats.status_bits = data->stats_msg.status_bits;
+//			stats.awb_ymin = data->stats_msg.awb_ymin;
 
-			if (data->stats_msg.aec_buff) {
-				stats.aec.buff =
+			if (data->stats_msg.aec_buff || data->stats_msg.awb_buff || data->stats_msg.af_buff || data->stats_msg.ihist_buff) {
+				stats.buffer =
 				msm_pmem_stats_ptov_lookup(sync,
-						data->stats_msg.aec_buff,
-						&(stats.aec.fd));
-				if (!stats.aec.buff) {
+						data->phy.sbuf_phy,
+						&(stats.fd));
+				if (!stats.buffer) {
 					pr_err("%s: msm_pmem_stats_ptov_lookup error\n",
 						__func__);
 					rc = -EINVAL;
 					goto failure;
 				}
-
-			} else {
-				stats.aec.buff = 0;
 			}
+#if 0
 			if (data->stats_msg.awb_buff) {
 				stats.awb.buff =
 				msm_pmem_stats_ptov_lookup(sync,
@@ -1396,7 +1394,8 @@ static int msm_get_stats(struct msm_sync *sync, void __user *arg)
 				stats.cs.buff = 0;
 			}
 
-			se.stats_event.frame_id = data->phy.frame_id;
+#endif
+//			se.stats_event.frame_id = data->phy.frame_id;
 			if (copy_to_user((void *)(se.stats_event.data),
 					&stats,
 					sizeof(struct msm_stats_buf))) {
@@ -1405,7 +1404,7 @@ static int msm_get_stats(struct msm_sync *sync, void __user *arg)
 				goto failure;
 			}
 		} else 
-#endif
+//#endif
 		if ((data->type >= VFE_MSG_STATS_AEC) &&
 			(data->type <=  VFE_MSG_STATS_WE)) {
 			/* the check above includes all stats type. */
@@ -2344,8 +2343,9 @@ static int msm_axi_config(struct msm_sync *sync, void __user *arg)
 	return 0;
 }
 
+#if 0
 static int __msm_get_pic(struct msm_sync *sync,
-		struct msm_frame *frame)
+		struct msm_ctrl_cmd *ctrl)
 {
 
 	int rc = 0;
@@ -2354,6 +2354,36 @@ static int __msm_get_pic(struct msm_sync *sync,
 	struct msm_vfe_phy_info *pphy;
 	struct msm_pmem_info pmem_info;
 	struct msm_frame *pframe;
+	unsigned long flags = 0;
+
+
+        spin_lock_irqsave(&sync->abort_pict_lock, flags);
+        sync->get_pic_abort = 0;
+        spin_unlock_irqrestore(&sync->abort_pict_lock, flags);
+
+
+        rc = wait_event_interruptible_timeout(
+                        sync->pict_q.wait,
+                        !list_empty_careful(
+                                &sync->pict_q.list) || sync->get_pic_abort,
+                        msecs_to_jiffies(5000));
+
+        spin_lock_irqsave(&sync->abort_pict_lock, flags);
+        if (sync->get_pic_abort) {
+                sync->get_pic_abort = 0;
+                spin_unlock_irqrestore(&sync->abort_pict_lock, flags);
+                return -ENODATA;
+        }
+        spin_unlock_irqrestore(&sync->abort_pict_lock, flags);
+
+        if (list_empty_careful(&sync->pict_q.list)) {
+                if (rc == 0)
+                        return -ETIMEDOUT;
+                if (rc < 0) {
+                        pr_err("%s: rc %d\n", __func__, rc);
+                        return rc;
+                }
+        }
 
 	qcmd = msm_dequeue(&sync->pict_q, list_pict);
 
@@ -2413,51 +2443,109 @@ err:
 
 	return rc;
 }
+#endif
+
+static int __msm_get_pic(struct msm_sync *sync, struct msm_ctrl_cmd *ctrl)
+{
+        int rc = 0;
+        int tm;
+        unsigned long flags = 0;
+
+        struct msm_queue_cmd *qcmd = NULL;
+
+        tm = (int)ctrl->timeout_ms;
+
+        spin_lock_irqsave(&sync->abort_pict_lock, flags);
+        sync->get_pic_abort = 0;
+        spin_unlock_irqrestore(&sync->abort_pict_lock, flags);
+
+        rc = wait_event_interruptible_timeout(
+                        sync->pict_q.wait,
+                        !list_empty_careful(
+                                &sync->pict_q.list) || sync->get_pic_abort,
+                        msecs_to_jiffies(tm));
+
+        spin_lock_irqsave(&sync->abort_pict_lock, flags);
+        if (sync->get_pic_abort) {
+                sync->get_pic_abort = 0;
+                spin_unlock_irqrestore(&sync->abort_pict_lock, flags);
+                return -ENODATA;
+        }
+        spin_unlock_irqrestore(&sync->abort_pict_lock, flags);
+
+        if (list_empty_careful(&sync->pict_q.list)) {
+                if (rc == 0)
+                        return -ETIMEDOUT;
+                if (rc < 0) {
+                        pr_err("%s: rc %d\n", __func__, rc);
+                        return rc;
+                }
+        }
+
+        rc = 0;
+
+        qcmd = msm_dequeue(&sync->pict_q, list_pict);
+        BUG_ON(!qcmd);
+
+        if (qcmd->command != NULL) {
+                struct msm_ctrl_cmd *q =
+                        (struct msm_ctrl_cmd *)qcmd->command;
+                ctrl->type = q->type;
+                ctrl->status = q->status;
+        } else {
+                ctrl->type = -1;
+                ctrl->status = -1;
+        }
+
+        free_qcmd(qcmd);
+
+        return rc;
+}
+
 
 static int msm_get_pic(struct msm_sync *sync, void __user *arg)
 {
-	int rc = 0;
-	struct msm_frame frame;
+        struct msm_ctrl_cmd ctrlcmd_t;
+        int rc;
 
-	if (copy_from_user(&frame,
-				arg,
-				sizeof(struct msm_frame))) {
-		ERR_COPY_FROM_USER();
-		return -EFAULT;
-	}
+        if (copy_from_user(&ctrlcmd_t,
+                                arg,
+                                sizeof(struct msm_ctrl_cmd))) {
+                ERR_COPY_FROM_USER();
+                return -EFAULT;
+        }
 
-	rc = __msm_get_pic(sync, &frame);
-	if (rc < 0)
-		return rc;
+        rc = __msm_get_pic(sync, &ctrlcmd_t);
+        if (rc < 0) {
+                pr_err("%s, failed\n", __func__);
+                return rc;
+        }
 
-	if (sync->croplen && (!sync->stereocam_enabled)) {
-		if (frame.croplen != sync->croplen) {
-			pr_err("%s: invalid frame croplen %d,"
-				"expecting %d\n",
-				__func__,
-				frame.croplen,
-				sync->croplen);
-			return -EINVAL;
-		}
-
-		if (copy_to_user((void *)frame.cropinfo,
-				sync->cropinfo,
-				sync->croplen)) {
-			ERR_COPY_TO_USER();
-			return -EFAULT;
-		}
-	}
-	CDBG("%s: copy snapshot frame to user\n", __func__);
-	if (copy_to_user((void *)arg,
-				&frame, sizeof(struct msm_frame))) {
-		ERR_COPY_TO_USER();
-		rc = -EFAULT;
-	}
-
-	CDBG("%s: got pic frame\n", __func__);
-
-	return rc;
+        if (sync->croplen) {
+                if (ctrlcmd_t.length != sync->croplen) {
+                        pr_err("%s: invalid len %d < %d\n",
+                                __func__,
+                                ctrlcmd_t.length,
+                                sync->croplen);
+                        return -EINVAL;
+                }
+                if (copy_to_user(ctrlcmd_t.value,
+                                sync->cropinfo,
+                                sync->croplen)) {
+                        ERR_COPY_TO_USER();
+                        return -EFAULT;
+                }
+        }
+        pr_info("%s: copy snapshot frame to user\n", __func__);
+        if (copy_to_user((void *)arg,
+                &ctrlcmd_t,
+                sizeof(struct msm_ctrl_cmd))) {
+                ERR_COPY_TO_USER();
+                return -EFAULT;
+        }
+        return 0;
 }
+
 
 static int msm_set_crop(struct msm_sync *sync, void __user *arg)
 {
@@ -3042,6 +3130,11 @@ static long msm_ioctl_control(struct file *filep, unsigned int cmd,
 		 */
 		rc = msm_ctrl_cmd_done(ctrl_pmsm, argp);
 		break;
+                rc = msm_get_pic(pmsm->sync, argp);
+                break;
+        case MSM_CAM_IOCTL_GET_PICTURE:
+                rc = msm_get_pic(pmsm->sync, argp);
+                break;
 	case MSM_CAM_IOCTL_GET_SENSOR_INFO:
 		rc = msm_get_sensor_info(pmsm->sync, argp);
 		break;
@@ -3618,10 +3711,38 @@ static void msm_vfe_sync(struct msm_vfe_resp *vdata,
 		}
 		break;
 
+        case VFE_MSG_STATS_AWB:
+                CDBG("%s: qtype %d, AWB stats, enqueue event_q.\n",
+                        __func__, vdata->type);
+                break;
+
+        case VFE_MSG_STATS_AEC:
+                CDBG("%s: qtype %d, AEC stats, enqueue event_q.\n",
+                        __func__, vdata->type);
+                break;
+
+        case VFE_MSG_STATS_IHIST:
+                CDBG("%s: qtype %d, ihist stats, enqueue event_q.\n",
+                        __func__, vdata->type);
+                break;
+
+        case VFE_MSG_STATS_RS:
+                CDBG("%s: qtype %d, rs stats, enqueue event_q.\n",
+                        __func__, vdata->type);
+                break;
+
+
+        case VFE_MSG_STATS_CS:
+                CDBG("%s: qtype %d, cs stats, enqueue event_q.\n",
+                        __func__, vdata->type);
+                break;
+
+
 	case VFE_MSG_COMMON:
 		CDBG("%s: qtype %d, comp stats, enqueue event_q.\n",
 			__func__, vdata->type);
 		break;
+
 
 	case VFE_MSG_GENERAL:
 		CDBG("%s: qtype %d, general msg, enqueue event_q.\n",

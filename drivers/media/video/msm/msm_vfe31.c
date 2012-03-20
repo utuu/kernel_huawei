@@ -365,7 +365,19 @@ static void vfe_addr_convert(struct msm_vfe_phy_info *pinfo,
 		*elen = vfe31_ctrl->extlen;
 	}
 		break;
+        case VFE_MSG_STATS_AF:
+        case VFE_MSG_STATS_AEC:
+        case VFE_MSG_STATS_AWB:
+        case VFE_MSG_STATS_IHIST:
+        case VFE_MSG_STATS_RS:
+        case VFE_MSG_STATS_CS:
+                pinfo->sbuf_phy =
+                ((struct vfe_message *)data)->_u.msgStats.buffer;
 
+                pinfo->frame_id =
+                ((struct vfe_message *)data)->_u.msgStats.frameCounter;
+
+                break;
 	default:
 		break;
 	} /* switch */
@@ -421,29 +433,47 @@ static void vfe31_proc_ops(enum VFE31_MESSAGE_ID id, void *msg, size_t len)
 			&(rp->extlen));
 		break;
 
-/*	case MSG_ID_COMMON:
-		rp->type = VFE_MSG_COMMON;
-		rp->stats_msg.status_bits = ((struct vfe_message *)
-			rp->evt_msg.data)->_u.msgStats.status_bits;
-		rp->stats_msg.frame_id = ((struct vfe_message *)
-			rp->evt_msg.data)->_u.msgStats.frameCounter;
+        case MSG_ID_STATS_AF:
+                rp->type = VFE_MSG_STATS_AF;
+                vfe_addr_convert(&(rp->phy), VFE_MSG_STATS_AF,
+                                rp->evt_msg.data, NULL, NULL);
+                break;
 
-		rp->stats_msg.aec_buff = ((struct vfe_message *)
-			rp->evt_msg.data)->_u.msgStats.buff.aec;
-		rp->stats_msg.awb_buff = ((struct vfe_message *)
-			rp->evt_msg.data)->_u.msgStats.buff.awb;
-		rp->stats_msg.af_buff = ((struct vfe_message *)
-			rp->evt_msg.data)->_u.msgStats.buff.af;
-		rp->stats_msg.ihist_buff = ((struct vfe_message *)
-			rp->evt_msg.data)->_u.msgStats.buff.ihist;
-		rp->stats_msg.rs_buff = ((struct vfe_message *)
-			rp->evt_msg.data)->_u.msgStats.buff.rs;
-		rp->stats_msg.cs_buff = ((struct vfe_message *)
-			rp->evt_msg.data)->_u.msgStats.buff.cs;
-		rp->stats_msg.awb_ymin = ((struct vfe_message *)
-			rp->evt_msg.data)->_u.msgStats.buff.awb_ymin;
-		break;
-*/
+        case MSG_ID_STATS_AWB:
+                rp->type = VFE_MSG_STATS_AWB;
+                vfe_addr_convert(&(rp->phy), VFE_MSG_STATS_AWB,
+                                rp->evt_msg.data, NULL, NULL);
+                break;
+
+        case MSG_ID_STATS_AEC:
+                rp->type = VFE_MSG_STATS_AEC;
+                vfe_addr_convert(&(rp->phy), VFE_MSG_STATS_AEC,
+                                rp->evt_msg.data, NULL, NULL);
+                break;
+
+        case MSG_ID_STATS_SKIN:
+                rp->type = VFE_MSG_STATS_SKIN;
+                vfe_addr_convert(&(rp->phy), VFE_MSG_STATS_SKIN,
+                                rp->evt_msg.data, NULL, NULL);
+                break;
+
+        case MSG_ID_STATS_IHIST:
+                rp->type = VFE_MSG_STATS_IHIST;
+                vfe_addr_convert(&(rp->phy), VFE_MSG_STATS_IHIST,
+                                rp->evt_msg.data, NULL, NULL);
+                break;
+
+        case MSG_ID_STATS_RS:
+                rp->type = VFE_MSG_STATS_RS;
+                vfe_addr_convert(&(rp->phy), VFE_MSG_STATS_RS,
+                                rp->evt_msg.data, NULL, NULL);
+                break;
+
+        case MSG_ID_STATS_CS:
+                rp->type = VFE_MSG_STATS_CS;
+                vfe_addr_convert(&(rp->phy), VFE_MSG_STATS_CS,
+                                rp->evt_msg.data, NULL, NULL);
+                break;
 
 	case MSG_ID_SYNC_TIMER0_DONE:
 		rp->type = VFE_MSG_SYNC_TIMER0;
@@ -1310,7 +1340,7 @@ static uint32_t vfe_stats_cs_buf_init(struct vfe_cmd_stats_buf *in)
 
 static void vfe31_start_common(void)
 {
-	uint32_t irq_mask = 0x00E00021;
+	uint32_t irq_mask = 0x00EFE021;
 	vfe31_ctrl->start_ack_pending = TRUE;
 	CDBG("VFE opertaion mode = 0x%x, output mode = 0x%x\n",
 		vfe31_ctrl->operation_mode, vfe31_ctrl->outpath.output_mode);
@@ -1331,8 +1361,8 @@ static void vfe31_start_common(void)
 	/* enable out of order option */
 	msm_io_w(0x80000000, vfe31_ctrl->vfebase + VFE_AXI_CFG);
 	/* enable performance monitor */
-	msm_io_w(1, vfe31_ctrl->vfebase + VFE_BUS_PM_CFG);
-	msm_io_w(1, vfe31_ctrl->vfebase + VFE_BUS_PM_CMD);
+//	msm_io_w(1, vfe31_ctrl->vfebase + VFE_BUS_PM_CFG);
+//	msm_io_w(1, vfe31_ctrl->vfebase + VFE_BUS_PM_CMD);
 
 
 	msm_io_dump(vfe31_ctrl->vfebase, 0x600);
@@ -2709,7 +2739,7 @@ static void vfe31_process_reg_update_irq(void)
 		} else if (vfe31_ctrl->recording_state ==
 			VFE_REC_STATE_STOPPED) {
 			CDBG("sent stop video rec ACK");
-//			vfe31_send_msg_no_payload(MSG_ID_STOP_REC_ACK);
+			vfe31_send_msg_no_payload(MSG_ID_STOP_REC_ACK);
 			vfe31_ctrl->recording_state = VFE_REC_STATE_IDLE;
 		}
 		spin_lock_irqsave(&vfe31_ctrl->update_ack_lock, flags);
@@ -2790,12 +2820,22 @@ static void vfe31_set_default_reg_values(void)
 	msm_io_w(0xFFFFFF, vfe31_ctrl->vfebase + VFE_CLAMP_MAX);
 
 	/* stats UB config */
+/*
 	msm_io_w(0x3980007, vfe31_ctrl->vfebase + VFE_BUS_STATS_AEC_UB_CFG);
 	msm_io_w(0x3A00007, vfe31_ctrl->vfebase + VFE_BUS_STATS_AF_UB_CFG);
 	msm_io_w(0x3A8000F, vfe31_ctrl->vfebase + VFE_BUS_STATS_AWB_UB_CFG);
 	msm_io_w(0x3B80007, vfe31_ctrl->vfebase + VFE_BUS_STATS_RS_UB_CFG);
 	msm_io_w(0x3C0001F, vfe31_ctrl->vfebase + VFE_BUS_STATS_CS_UB_CFG);
 	msm_io_w(0x3E0001F, vfe31_ctrl->vfebase + VFE_BUS_STATS_HIST_UB_CFG);
+*/
+        msm_io_w(0x3900007, vfe31_ctrl->vfebase + VFE_BUS_STATS_AEC_UB_CFG);
+        msm_io_w(0x3980007, vfe31_ctrl->vfebase + VFE_BUS_STATS_AF_UB_CFG);
+        msm_io_w(0x3A0000F, vfe31_ctrl->vfebase + VFE_BUS_STATS_AWB_UB_CFG);
+        msm_io_w(0x3B00007, vfe31_ctrl->vfebase + VFE_BUS_STATS_RS_UB_CFG);
+        msm_io_w(0x3B8001F, vfe31_ctrl->vfebase + VFE_BUS_STATS_CS_UB_CFG);
+        msm_io_w(0x3D8001F, vfe31_ctrl->vfebase + VFE_BUS_STATS_HIST_UB_CFG);
+        msm_io_w(0x3F80007, vfe31_ctrl->vfebase + VFE_BUS_STATS_SKIN_UB_CFG);
+
 }
 
 static void vfe31_process_reset_irq(void)
@@ -3436,6 +3476,61 @@ static uint32_t  vfe31_process_stats_irq_common(uint32_t statsNum,
 	return returnAddr;
 }
 
+static void vfe_send_stats_msg(uint32_t bufAddress, uint32_t statsNum)
+{
+        struct  vfe_message msg;
+        /* fill message with right content. */
+        /* @todo This is causing issues, need further investigate */
+        /* spin_lock_irqsave(&ctrl->state_lock, flags); */
+        msg._u.msgStats.frameCounter = vfe31_ctrl->vfeFrameId;
+        msg._u.msgStats.buffer = bufAddress;
+
+	CDBG("vfe_send_stats_msg %x %d\n",bufAddress,statsNum);
+
+        switch (statsNum) {
+        case statsAeNum:{
+                msg._d = MSG_ID_STATS_AEC;
+                vfe31_ctrl->aecStatsControl.ackPending = TRUE;
+                }
+                break;
+        case statsAfNum:{
+                msg._d = MSG_ID_STATS_AF;
+                vfe31_ctrl->afStatsControl.ackPending = TRUE;
+                }
+                break;
+        case statsAwbNum: {
+                msg._d = MSG_ID_STATS_AWB;
+                vfe31_ctrl->awbStatsControl.ackPending = TRUE;
+                }
+                break;
+
+        case statsIhistNum: {
+                msg._d = MSG_ID_STATS_IHIST;
+                vfe31_ctrl->ihistStatsControl.ackPending = TRUE;
+                }
+                break;
+        case statsRsNum: {
+                msg._d = MSG_ID_STATS_RS;
+                vfe31_ctrl->rsStatsControl.ackPending = TRUE;
+                }
+                break;
+        case statsCsNum: {
+                msg._d = MSG_ID_STATS_CS;
+                vfe31_ctrl->csStatsControl.ackPending = TRUE;
+                }
+                break;
+
+
+        default:
+                goto stats_done;
+        }
+
+        vfe31_proc_ops(msg._d,
+                &msg, sizeof(struct vfe_message));
+stats_done:
+        /* spin_unlock_irqrestore(&ctrl->state_lock, flags); */
+        return;
+}
 #if 0
 static void vfe_send_stats_msg(void)
 {
@@ -3466,7 +3561,8 @@ static void vfe_send_stats_msg(void)
 
 static void vfe31_process_stats(void)
 {
-	int32_t process_stats = false;
+	uint32_t bufAddress;
+	uint32_t statsNum;
 
 	CDBG("%s, stats = 0x%x\n", __func__, vfe31_ctrl->status_bits);
 
@@ -3476,7 +3572,7 @@ static void vfe31_process_stats(void)
 			vfe31_ctrl->aecStatsControl.bufToRender =
 				vfe31_process_stats_irq_common(statsAeNum,
 				vfe31_ctrl->aecStatsControl.nextFrameAddrBuf);
-			process_stats = true;
+			vfe_send_stats_msg(vfe31_ctrl->aecStatsControl.bufToRender,statsAeNum);
 		} else{
 			vfe31_ctrl->aecStatsControl.bufToRender = 0;
 			vfe31_ctrl->aecStatsControl.droppedStatsFrameCount++;
@@ -3491,7 +3587,7 @@ static void vfe31_process_stats(void)
 			vfe31_ctrl->awbStatsControl.bufToRender =
 				vfe31_process_stats_irq_common(statsAwbNum,
 				vfe31_ctrl->awbStatsControl.nextFrameAddrBuf);
-			process_stats = true;
+			vfe_send_stats_msg(vfe31_ctrl->awbStatsControl.bufToRender,statsAwbNum);
 		} else{
 			vfe31_ctrl->awbStatsControl.droppedStatsFrameCount++;
 			vfe31_ctrl->awbStatsControl.bufToRender = 0;
@@ -3507,7 +3603,7 @@ static void vfe31_process_stats(void)
 			vfe31_ctrl->afStatsControl.bufToRender =
 				vfe31_process_stats_irq_common(statsAfNum,
 				vfe31_ctrl->afStatsControl.nextFrameAddrBuf);
-			process_stats = true;
+			vfe_send_stats_msg(vfe31_ctrl->afStatsControl.bufToRender,statsAfNum);
 		} else {
 			vfe31_ctrl->afStatsControl.bufToRender = 0;
 			vfe31_ctrl->afStatsControl.droppedStatsFrameCount++;
@@ -3522,7 +3618,7 @@ static void vfe31_process_stats(void)
 			vfe31_ctrl->ihistStatsControl.bufToRender =
 				vfe31_process_stats_irq_common(statsIhistNum,
 				vfe31_ctrl->ihistStatsControl.nextFrameAddrBuf);
-			process_stats = true;
+			vfe_send_stats_msg(vfe31_ctrl->ihistStatsControl.bufToRender,statsIhistNum);
 		} else {
 			vfe31_ctrl->ihistStatsControl.droppedStatsFrameCount++;
 			vfe31_ctrl->ihistStatsControl.bufToRender = 0;
@@ -3537,7 +3633,7 @@ static void vfe31_process_stats(void)
 			vfe31_ctrl->rsStatsControl.bufToRender =
 				vfe31_process_stats_irq_common(statsRsNum,
 				vfe31_ctrl->rsStatsControl.nextFrameAddrBuf);
-			process_stats = true;
+			vfe_send_stats_msg(vfe31_ctrl->rsStatsControl.bufToRender,statsRsNum);
 		} else {
 			vfe31_ctrl->rsStatsControl.droppedStatsFrameCount++;
 			vfe31_ctrl->rsStatsControl.bufToRender = 0;
@@ -3553,7 +3649,7 @@ static void vfe31_process_stats(void)
 			vfe31_ctrl->csStatsControl.bufToRender =
 				vfe31_process_stats_irq_common(statsCsNum,
 				vfe31_ctrl->csStatsControl.nextFrameAddrBuf);
-			process_stats = true;
+			vfe_send_stats_msg(vfe31_ctrl->csStatsControl.bufToRender,statsCsNum);
 		} else {
 			vfe31_ctrl->csStatsControl.droppedStatsFrameCount++;
 			vfe31_ctrl->csStatsControl.bufToRender = 0;
@@ -3561,9 +3657,6 @@ static void vfe31_process_stats(void)
 	} else {
 		vfe31_ctrl->csStatsControl.bufToRender = 0;
 	}
-
-//	if (process_stats)
-//		vfe_send_stats_msg();
 
 	return;
 }

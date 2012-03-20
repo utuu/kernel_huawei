@@ -837,9 +837,11 @@ enum VFE31_MESSAGE_ID {
         MSG_ID_CAMIF_ERROR,
         MSG_ID_BUS_OVERFLOW,
         MSG_ID_SOF_ACK,
+        MSG_ID_STOP_REC_ACK,
 };
 
 
+/*
 struct stats_buffer {
 	uint8_t awb_ymin;
 	uint32_t aec;
@@ -850,11 +852,13 @@ struct stats_buffer {
 	uint32_t cs;
 	uint32_t skin;
 };
+*/
 
 struct vfe_msg_stats {
-	struct stats_buffer buff;
+//	struct stats_buffer buff;
+	uint32_t    buffer;
 	uint32_t    frameCounter;
-	uint32_t    status_bits;
+//	uint32_t    status_bits;
 };
 
 

@@ -593,12 +593,13 @@ static int aps_12d_probe(struct i2c_client *client, const struct i2c_device_id *
 		PROXIMITY_DEBUG("%s: vreg_gp4  vreg_set_level failed \n", __func__);
 		return rc;
 	}
+	mdelay(5);
 	rc = regulator_enable(vreg_gp4);
 	if (rc) {
 		pr_err("%s: vreg_gp4    vreg_enable failed \n", __func__);
 		return rc;
 	}
-	mdelay(15);
+	mdelay(25);
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
 		PROXIMITY_DEBUG(KERN_ERR "aps_12d_probe: need I2C_FUNC_I2C\n");
 		ret = -ENODEV;
@@ -631,11 +632,17 @@ static int aps_12d_probe(struct i2c_client *client, const struct i2c_device_id *
 	/* Command 2 register: 25mA,DC,12bit,Range1 */
 
 	/* make the rang smaller can make the ir changge bigger */
-	ret = aps_i2c_reg_write(aps, APS_12D_REG_CMD2, \
+	
+	ret=-1;
+	for(i=0;i<10 && ret!=0;i++) {
+		ret = aps_i2c_reg_write(aps, APS_12D_REG_CMD2, \
 	                         (uint8_t)(APS_12D_IRDR_SEL_50MA << 6 | \
 	                                   APS_12D_FREQ_SEL_DC << 4 | \
 	                                   APS_12D_RES_SEL_12 << 2 | \
 	                                   APS_12D_RANGE_SEL_ALS_1000));
+		printk("aps_12d_probe try %d\n",i);
+		mdelay(5);
+	}
 	if(ret < 0)
 	{
 		goto err_detect_failed;

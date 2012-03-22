@@ -708,6 +708,9 @@ void destroy_params(const struct kernel_param *params, unsigned num)
 {
 	unsigned int i;
 
+	if(params==NULL)
+		return;
+
 	for (i = 0; i < num; i++)
 		if (params[i].ops->free)
 			params[i].ops->free(params[i].arg);

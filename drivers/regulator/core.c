@@ -1496,8 +1496,10 @@ int regulator_enable(struct regulator *regulator)
 			       rdev->constraints->max_uV,
 			       regulator->min_uV,
 			       regulator->max_uV);
-			ret = -EINVAL;
-			goto out;
+			regulator->min_uV=rdev->constraints->min_uV;
+			regulator->max_uV=rdev->constraints->max_uV;
+//			ret = -EINVAL;
+//			goto out;
 		}
 
 		ret = update_voltage(regulator, regulator->min_uV,

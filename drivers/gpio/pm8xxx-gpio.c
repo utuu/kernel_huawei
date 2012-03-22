@@ -435,7 +435,7 @@ int pm8xxx_gpio_config(int gpio, struct pm_gpio *param)
 EXPORT_SYMBOL(pm8xxx_gpio_config);
 
 int pm8058_gpio_config(int gpio, struct pm_gpio *param) {
-	return pm8xxx_gpio_config(gpio,param);
+	return pm8xxx_gpio_config(gpio + NR_GPIO_IRQS,param);
 }
 EXPORT_SYMBOL(pm8058_gpio_config);
 

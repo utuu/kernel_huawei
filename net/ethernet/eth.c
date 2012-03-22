@@ -369,6 +369,14 @@ struct net_device *alloc_etherdev_mqs(int sizeof_priv, unsigned int txqs,
 }
 EXPORT_SYMBOL(alloc_etherdev_mqs);
 
+#undef alloc_etherdev_mq
+
+struct net_device *alloc_etherdev_mq(int sizeof_priv, unsigned int txqs) 
+{
+        return alloc_netdev_mqs(sizeof_priv, "eth%d", ether_setup, txqs, txqs);
+}
+EXPORT_SYMBOL(alloc_etherdev_mq);
+
 static size_t _format_mac_addr(char *buf, int buflen,
 			       const unsigned char *addr, int len)
 {

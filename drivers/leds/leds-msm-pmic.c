@@ -82,6 +82,52 @@ int led_pwm_gpio_config(void)
 }
 #endif
 
+extern struct pwm_device *msm_flash_pwm;
+
+static struct  pm8058_gpio camera_flash = {
+                .direction      = PM_GPIO_DIR_OUT,
+                .output_buffer  = PM_GPIO_OUT_BUF_CMOS,
+                .output_value   = 0,
+                .pull           = PM_GPIO_PULL_NO,
+                .vin_sel        = 0,
+                .out_strength   = PM_GPIO_STRENGTH_HIGH,
+                .function       = PM_GPIO_FUNC_2,
+                .inv_int_pol    = 1,
+        };
+
+static void msm_flashlight_led_set(struct led_classdev *led_cdev,
+        enum led_brightness value)
+{
+        int rc = 0;
+        int PWM_PERIOD = NSEC_PER_SEC / 500;
+
+        if(value==1) // some apps expect the flashlight to be either on or off
+                value=100;
+
+        if (!msm_flash_pwm) {
+                rc = pm8058_gpio_config( 23, &camera_flash);
+                if (rc)  {
+                        pr_err("%s PMIC GPIO 23 write failed\n", __func__);
+                        return;
+                }
+                msm_flash_pwm = pwm_request(0, "camera-flash");
+                if (msm_flash_pwm == NULL) {
+                        pr_err("%s: FAIL pwm_request(): msm_flash_pwm=%p\n",
+                               __func__, msm_flash_pwm);
+                        msm_flash_pwm = NULL;
+                        return;
+                }
+        }
+        if(value==0) {
+                pwm_disable(msm_flash_pwm);
+        } else {
+                rc = pwm_config(msm_flash_pwm,(PWM_PERIOD/255)*value/NSEC_PER_USEC,PWM_PERIOD/NSEC_PER_USEC);
+                if (rc >= 0)
+                        rc = pwm_enable(msm_flash_pwm);
+        }
+}
+
+
 static void msm_keypad_bl_led_set(struct led_classdev *led_cdev,
 	enum led_brightness value)
 {
@@ -140,6 +186,13 @@ static struct led_classdev msm_kp_bl_led = {
 	.brightness		= LED_OFF,
 };
 
+static struct led_classdev msm_flashlight_led = {
+        .name                   = "flashlight",
+        .brightness_set         = msm_flashlight_led_set,
+        .brightness             = LED_OFF,
+};
+
+
 static int msm_pmic_led_probe(struct platform_device *pdev)
 {
 	int rc;
@@ -157,6 +210,12 @@ static int msm_pmic_led_probe(struct platform_device *pdev)
         bl_pwm = pwm_request(LED_PM_GPIO25_PWM_ID, "keypad backlight");
     }
 #endif
+
+        rc = led_classdev_register(&pdev->dev, &msm_flashlight_led);
+        if (rc) {
+                dev_err(&pdev->dev, "unable to register led class driver\n");
+                return rc;
+        }
 
 	msm_keypad_bl_led_set(&msm_kp_bl_led, LED_OFF);
 	return rc;

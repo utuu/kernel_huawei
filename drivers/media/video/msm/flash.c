@@ -341,6 +341,8 @@ err1:
 	return rc;
 }
 
+struct pwm_device *msm_flash_pwm = NULL;
+
 static int msm_camera_flash_pwm(
 	struct msm_camera_sensor_flash_pwm *pwm,
 	unsigned led_state)
@@ -350,12 +352,12 @@ static int msm_camera_flash_pwm(
 
 	/*description:pwm camera flash*/
 	#ifdef CONFIG_HUAWEI_KERNEL
-	static struct pwm_device *flash_pwm = NULL;
+//	static struct pwm_device *flash_pwm = NULL;
     #else 
     static struct pwm_device *flash_pwm;
     #endif
 	/*If it is the first time to enter the function*/
-	if (!flash_pwm) {
+	if (!msm_flash_pwm) {
         #ifdef CONFIG_HUAWEI_KERNEL
 		 rc = pm8xxx_gpio_config( 205, &camera_flash);
   	 	 if (rc)  {
@@ -363,41 +365,41 @@ static int msm_camera_flash_pwm(
      	 	return rc;
       	 }
         #endif
-		flash_pwm = pwm_request(pwm->channel, "camera-flash");
-		if (flash_pwm == NULL || IS_ERR(flash_pwm)) {
+		msm_flash_pwm = pwm_request(pwm->channel, "camera-flash");
+		if (msm_flash_pwm == NULL || IS_ERR(msm_flash_pwm)) {
 			pr_err("%s: FAIL pwm_request(): flash_pwm=%p\n",
-			       __func__, flash_pwm);
-			flash_pwm = NULL;
+			       __func__, msm_flash_pwm);
+			msm_flash_pwm = NULL;
 			return -ENXIO;
 		}
 	}
 
 	switch (led_state) {
 	case MSM_CAMERA_LED_LOW:
-		rc = pwm_config(flash_pwm,
+		rc = pwm_config(msm_flash_pwm,
 			(PWM_PERIOD/pwm->max_load)*pwm->low_load,
 			PWM_PERIOD);
 		if (rc >= 0)
-			rc = pwm_enable(flash_pwm);
+			rc = pwm_enable(msm_flash_pwm);
 		break;
 
 	case MSM_CAMERA_LED_HIGH:
-		rc = pwm_config(flash_pwm,
+		rc = pwm_config(msm_flash_pwm,
 			(PWM_PERIOD/pwm->max_load)*pwm->high_load,
 			PWM_PERIOD);
 		if (rc >= 0)
-			rc = pwm_enable(flash_pwm);
+			rc = pwm_enable(msm_flash_pwm);
 		break;
 	case MSM_CAMERA_LED_TORCH:
-		rc = pwm_config(flash_pwm,
+		rc = pwm_config(msm_flash_pwm,
 			(PWM_PERIOD/pwm->max_load)*CAMERA_LED_TORCH_MA,
 			PWM_PERIOD);
 		if (rc >= 0)
-			rc = pwm_enable(flash_pwm);
+			rc = pwm_enable(msm_flash_pwm);
 		break;
 
 	case MSM_CAMERA_LED_OFF:
-		pwm_disable(flash_pwm);
+		pwm_disable(msm_flash_pwm);
 		break;
 	case MSM_CAMERA_LED_INIT:
 	case MSM_CAMERA_LED_RELEASE:

@@ -576,10 +576,10 @@ static struct snddev_icodec_data snddev_ihs_stereo_rx_data_u8800 = {
 	.default_sample_rate = 48000,
 	.pamp_on = msm_snddev_hsed_voltage_on,
 	.pamp_off = msm_snddev_hsed_voltage_off,
-	.max_voice_rx_vol[VOC_NB_INDEX] = -300, 
-	.min_voice_rx_vol[VOC_NB_INDEX] = -1800, 
-	.max_voice_rx_vol[VOC_WB_INDEX] = -500, 
-	.min_voice_rx_vol[VOC_WB_INDEX] = -2000 
+	.max_voice_rx_vol[VOC_NB_INDEX] = -500, 
+	.min_voice_rx_vol[VOC_NB_INDEX] = -2000, 
+	.max_voice_rx_vol[VOC_WB_INDEX] = -700, 
+	.min_voice_rx_vol[VOC_WB_INDEX] = -2200 
 };
 
 static struct platform_device msm_ihs_stereo_rx_device_u8800 = {

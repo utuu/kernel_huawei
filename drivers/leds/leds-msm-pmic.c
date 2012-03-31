@@ -21,6 +21,8 @@
 
 #ifdef CONFIG_HUAWEI_LEDS_PMIC
 #include <linux/mfd/pmic8058.h>
+#include <linux/pwm.h>
+#include <linux/pmic8058-pwm.h>
 #include <mach/gpio.h>
 #include <mach/vreg.h>
 #include <linux/gpio.h>
@@ -84,7 +86,7 @@ int led_pwm_gpio_config(void)
 
 extern struct pwm_device *msm_flash_pwm;
 
-static struct  pm8058_gpio camera_flash = {
+static struct  pm_gpio camera_flash = {
                 .direction      = PM_GPIO_DIR_OUT,
                 .output_buffer  = PM_GPIO_OUT_BUF_CMOS,
                 .output_value   = 0,
@@ -105,7 +107,7 @@ static void msm_flashlight_led_set(struct led_classdev *led_cdev,
                 value=100;
 
         if (!msm_flash_pwm) {
-                rc = pm8058_gpio_config( 23, &camera_flash);
+                rc = pm8xxx_gpio_config( 205, &camera_flash);
                 if (rc)  {
                         pr_err("%s PMIC GPIO 23 write failed\n", __func__);
                         return;

@@ -861,7 +861,7 @@ static int mass_storage_function_init(struct android_usb_function *f,
 	config->fsg.luns[0].removable = 1;
     /* 1 presents cdrom type */
 #ifdef CONFIG_HUAWEI_KERNEL
-	config->fsg.luns[0].cdrom = 1;
+//	config->fsg.luns[0].cdrom = 1;
 #endif  /* CONFIG_HUAWEI_KERNEL */
 
 	common = fsg_common_init(NULL, cdev, &config->fsg);

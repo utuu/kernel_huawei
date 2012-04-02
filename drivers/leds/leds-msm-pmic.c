@@ -204,6 +204,7 @@ static int msm_pmic_led_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "unable to register led class driver\n");
 		return rc;
 	}
+
 #ifdef CONFIG_HUAWEI_LEDS_PMIC
     if( machine_is_msm8255_u8860lp()	
 	  ||machine_is_msm8255_u8860_51())

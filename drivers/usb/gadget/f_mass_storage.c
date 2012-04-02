@@ -1384,7 +1384,7 @@ static int do_read_header(struct fsg_common *common, struct fsg_buffhd *bh)
 	return 8;
 }
 
-#ifndef CONFIG_HUAWEI_KERNEL
+#ifdef CONFIG_HUAWEI_KERNEL
 static int do_read_toc(struct fsg_common *common, struct fsg_buffhd *bh)
 {
 	struct fsg_lun	*curlun = common->curlun;
@@ -2273,7 +2273,7 @@ static int do_scsi_command(struct fsg_common *common)
 			get_unaligned_be16(&common->cmnd[7]);
 		reply = check_command(common, 10, DATA_DIR_TO_HOST,
                       /* to support cdrom in mac system */
-#ifndef CONFIG_HUAWEI_KERNEL
+#ifdef CONFIG_HUAWEI_KERNEL
 				      (7<<6) | (1<<1), 1,
 #else
 				      (3<<1) | (7<<7), 1,

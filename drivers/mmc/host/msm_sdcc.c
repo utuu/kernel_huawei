@@ -4608,7 +4608,7 @@ msmsdcc_runtime_resume(struct device *dev)
 			if ((host->plat->cfg_mpm_sdiowakeup ||
 					host->plat->sdiowakeup_irq) &&
 					wake_lock_active(&host->sdio_wlock))
-				wake_lock_timeout(&host->sdio_wlock, HZ/5);
+				wake_lock_timeout(&host->sdio_wlock, HZ/2);
 		}
 
 		wake_unlock(&host->sdio_suspend_wlock);

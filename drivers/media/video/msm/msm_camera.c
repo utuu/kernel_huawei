@@ -2343,107 +2343,6 @@ static int msm_axi_config(struct msm_sync *sync, void __user *arg)
 	return 0;
 }
 
-#if 0
-static int __msm_get_pic(struct msm_sync *sync,
-		struct msm_ctrl_cmd *ctrl)
-{
-
-	int rc = 0;
-	struct msm_queue_cmd *qcmd = NULL;
-	struct msm_vfe_resp *vdata;
-	struct msm_vfe_phy_info *pphy;
-	struct msm_pmem_info pmem_info;
-	struct msm_frame *pframe;
-	unsigned long flags = 0;
-
-
-        spin_lock_irqsave(&sync->abort_pict_lock, flags);
-        sync->get_pic_abort = 0;
-        spin_unlock_irqrestore(&sync->abort_pict_lock, flags);
-
-
-        rc = wait_event_interruptible_timeout(
-                        sync->pict_q.wait,
-                        !list_empty_careful(
-                                &sync->pict_q.list) || sync->get_pic_abort,
-                        msecs_to_jiffies(5000));
-
-        spin_lock_irqsave(&sync->abort_pict_lock, flags);
-        if (sync->get_pic_abort) {
-                sync->get_pic_abort = 0;
-                spin_unlock_irqrestore(&sync->abort_pict_lock, flags);
-                return -ENODATA;
-        }
-        spin_unlock_irqrestore(&sync->abort_pict_lock, flags);
-
-        if (list_empty_careful(&sync->pict_q.list)) {
-                if (rc == 0)
-                        return -ETIMEDOUT;
-                if (rc < 0) {
-                        pr_err("%s: rc %d\n", __func__, rc);
-                        return rc;
-                }
-        }
-
-	qcmd = msm_dequeue(&sync->pict_q, list_pict);
-
-	if (!qcmd) {
-		pr_err("%s: no pic frame.\n", __func__);
-		return -EAGAIN;
-	}
-
-	if (MSM_CAM_Q_PP_MSG != qcmd->type) {
-		vdata = (struct msm_vfe_resp *)(qcmd->command);
-		pphy = &vdata->phy;
-
-		rc = msm_pmem_frame_ptov_lookup2(sync,
-				pphy->y_phy,
-				&pmem_info,
-				1); /* mark pic frame in use */
-
-		if (rc < 0) {
-			pr_err("%s: cannot get pic frame, invalid lookup"
-				" address y %x cbcr %x\n",
-				__func__, pphy->y_phy, pphy->cbcr_phy);
-			goto err;
-		}
-
-		frame->ts = qcmd->ts;
-		frame->buffer = (unsigned long)pmem_info.vaddr;
-		frame->y_off = pmem_info.y_off;
-		frame->cbcr_off = pmem_info.cbcr_off;
-		frame->fd = pmem_info.fd;
-		if (sync->stereocam_enabled &&
-			sync->stereo_state != STEREO_RAW_SNAP_STARTED) {
-			if (pmem_info.type == MSM_PMEM_THUMBNAIL_VPE)
-				frame->path = OUTPUT_TYPE_T;
-			else
-				frame->path = OUTPUT_TYPE_S;
-		} else
-			frame->path = vdata->phy.output_id;
-
-		CDBG("%s: y %x, cbcr %x, qcmd %x, virt_addr %x\n",
-			__func__, pphy->y_phy,
-			pphy->cbcr_phy, (int) qcmd, (int) frame->buffer);
-	} else { /* PP */
-		pframe = (struct msm_frame *)(qcmd->command);
-		frame->ts = qcmd->ts;
-		frame->buffer = pframe->buffer;
-		frame->y_off = pframe->y_off;
-		frame->cbcr_off = pframe->cbcr_off;
-		frame->fd = pframe->fd;
-		frame->path = pframe->path;
-		CDBG("%s: PP y_off %x, cbcr_off %x, path %d vaddr 0x%x\n",
-			__func__, frame->y_off, frame->cbcr_off, frame->path,
-			(int) frame->buffer);
-	}
-
-err:
-	free_qcmd(qcmd);
-
-	return rc;
-}
-#endif
 
 static int __msm_get_pic(struct msm_sync *sync, struct msm_ctrl_cmd *ctrl)
 {
@@ -3130,8 +3029,6 @@ static long msm_ioctl_control(struct file *filep, unsigned int cmd,
 		 */
 		rc = msm_ctrl_cmd_done(ctrl_pmsm, argp);
 		break;
-                rc = msm_get_pic(pmsm->sync, argp);
-                break;
         case MSM_CAM_IOCTL_GET_PICTURE:
                 rc = msm_get_pic(pmsm->sync, argp);
                 break;
@@ -3549,6 +3446,23 @@ static void msm_vfe_sync(struct msm_vfe_resp *vdata,
 				"stereo processing.\n", __func__);
 			break;
 		}
+                if (sync->pp_mask & PP_SNAP) {
+                        if (!sync->pp_thumb) {
+                                CDBG("%s: pp sending thumbnail to config\n",
+                                        __func__);
+                                sync->pp_thumb = qcmd;
+                        }
+                        break;
+                } else {
+                /* this is for normal snapshot case. right now we only have
+                single shot. still keeping the old way. therefore no need
+                to send anything to user.*/
+                        if (atomic_read(&qcmd->on_heap))
+                                free_qcmd(qcmd);
+                        return;
+                }
+
+/*
 		if (sync->pp_mask & PP_SNAP) {
 			CDBG("%s: pp sending thumbnail to config\n",
 				__func__);
@@ -3556,6 +3470,7 @@ static void msm_vfe_sync(struct msm_vfe_resp *vdata,
 			msm_enqueue(&sync->pict_q, &qcmd->list_pict);
 			return;
 		}
+*/
 
 	case VFE_MSG_OUTPUT_S:
 		if (sync->stereocam_enabled &&
@@ -3708,6 +3623,7 @@ static void msm_vfe_sync(struct msm_vfe_resp *vdata,
 				sync->pp_stereosnap = qcmd;
 				return;
 			}
+			msm_enqueue(&sync->pict_q, &qcmd->list_pict);
 		}
 		break;
 

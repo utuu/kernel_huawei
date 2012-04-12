@@ -93,6 +93,9 @@ static struct kobj_attribute update_firmware_attribute = {
                          };
 #endif /* CONFIG_SYNAPTICS_UPDATE_RMI_TS_FIRMWARE */
 /*use this to contrl the debug message*/
+
+static int default_sensitivity=4;
+
 static int synaptics_debug_mask;
 module_param_named ( synaptics_debug, synaptics_debug_mask, int,
                      S_IRUGO | S_IWUSR | S_IWGRP );
@@ -888,6 +891,7 @@ static int synaptics_rmi4_probe (
 	} else {
 		printk ( KERN_ERR "the SENSITIVE is failed to changge!\n" );
 	}
+/*
 	ret =
 	        i2c_smbus_write_byte_data ( ts->client, F11_2D_CTRL00,
 	                                    REPORTING_MODE );
@@ -897,10 +901,11 @@ static int synaptics_rmi4_probe (
 	} else {
 		TS_DEBUG_RMI ( "the ReportingMode is changged ok!\n" );
 	}
+*/
 	// Change the mimimum delta value for a touch to be reported.
 	// these addresses were found by trial and error!
-	ret = i2c_smbus_write_byte_data ( ts->client, 41 ,4 );
-	ret = i2c_smbus_write_byte_data ( ts->client, 42 ,4 );
+	ret = i2c_smbus_write_byte_data ( ts->client, 41 ,default_sensitivity );
+	ret = i2c_smbus_write_byte_data ( ts->client, 42 ,default_sensitivity );
 
 	d_entry = create_proc_entry ( "tp_hw_type", S_IRUGO | S_IWUSR | S_IWGRP, NULL );
 	if ( d_entry ) {

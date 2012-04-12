@@ -381,7 +381,7 @@ static int pmapp_rpc_req_reply(struct pmapp_buf *tbuf, struct pmapp_buf *rbuf,
 	int	proc)
 {
 	struct pmapp_ctrl *pm = &pmapp_ctrl;
-	int	ans, len, i;
+	int	ans, len, i, tries;
 
 
 	if ((pm->endpoint == NULL) || IS_ERR(pm->endpoint)) {
@@ -415,11 +415,17 @@ static int pmapp_rpc_req_reply(struct pmapp_buf *tbuf, struct pmapp_buf *rbuf,
 	*/
 	tbuf->data = tbuf->start;
 	tbuf->len += sizeof(struct rpc_request_hdr);
-
-	len = msm_rpc_call_reply(pm->endpoint, proc,
+	tries=20;
+	do {
+		len = msm_rpc_call_reply(pm->endpoint, proc,
 				tbuf->data, tbuf->len,
 				rbuf->data, rbuf->size,
 				PMAPP_RPC_TIMEOUT);
+		if(len==-EAGAIN) {
+			printk(KERN_ERR "%s: rpc failed! try again %d\n", __func__, tries);
+			msleep(20);
+		}
+	} while (len==-EAGAIN && tries--);
 
 	if (len <= 0) {
 		printk(KERN_ERR "%s: rpc failed! len = %d\n", __func__, len);

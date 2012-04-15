@@ -26,6 +26,8 @@
 #define ADD_VALUE			4
 #define PWM_LEVEL_ADJUST	226
 #define BL_MIN_LEVEL 	    15
+#define PM8058_GPIO_PM_TO_SYS(pm_gpio)     (pm_gpio + NR_GPIO_IRQS)
+
 static struct pwm_device *bl_pwm;
 boolean first_set_bl = TRUE;
 static struct msm_fb_data_type *mfd_local;
@@ -58,7 +60,7 @@ int backlight_pwm_gpio_config(void)
 		|| machine_is_msm8255_u8860_51()
 		|| machine_is_msm8255_u8730())
 	{
-        rc = pm8xxx_gpio_config( 24, &backlight_drv);
+        rc = pm8xxx_gpio_config( PM8058_GPIO_PM_TO_SYS(24), &backlight_drv);
     }
     else if(machine_is_msm7x30_u8820()) 
     {

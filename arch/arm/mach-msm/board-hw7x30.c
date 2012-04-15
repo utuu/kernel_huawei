@@ -163,7 +163,7 @@ smem_huawei_vender usb_para_data;
 
 #define PMIC_GPIO_INT		27
 #define PMIC_VREG_WLAN_LEVEL	2900
-#define PMIC_GPIO_SD_DET	36
+#define PMIC_GPIO_SD_DET	21
 #define PMIC_GPIO_SDC4_EN_N	35  /* PMIC GPIO Number 18 */
 #define PMIC_GPIO_HDMI_5V_EN_V3 32  /* PMIC GPIO for V3 H/W */
 #define PMIC_GPIO_HDMI_5V_EN_V2 39 /* PMIC GPIO for V2 H/W */
@@ -427,7 +427,7 @@ static int pm8058_gpios_init(void)
 		},
 	};
 
-	if (machine_is_msm7x30_fluid())
+/*	if (machine_is_msm7x30_fluid())
 		sdcc_det.config.inv_int_pol = 1;
 
 	rc = pm8xxx_gpio_config(sdcc_det.gpio, &sdcc_det.config);
@@ -435,6 +435,7 @@ static int pm8058_gpios_init(void)
 		pr_err("%s PMIC_GPIO_SD_DET config failed\n", __func__);
 		return rc;
 	}
+*/
 #endif
 
 	if (machine_is_msm8x55_svlte_surf() || machine_is_msm8x55_svlte_ffa() ||
@@ -480,16 +481,15 @@ static int pm8058_gpios_init(void)
 /* support U8820 version*/
 #ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
     /* for new interface Qualcomm ICS4.0  */
-	if (machine_is_msm7x30_fluid() || (machine_is_msm7x30_u8820()))
-		sdcc_det.config.inv_int_pol = 1;
+//	if (machine_is_msm7x30_fluid() || (machine_is_msm7x30_u8820()))
+	sdcc_det.config.inv_int_pol = 1;
 
-	rc = pm8xxx_gpio_config(PMIC_GPIO_SD_DET - 1, &sdcc_det.config);
+	rc = pm8xxx_gpio_config(sdcc_det.gpio, &sdcc_det.config);
 	if (rc) {
 		pr_err("%s PMIC_GPIO_SD_DET config failed\n", __func__);
 		return rc;
 	}
 #endif
-
 
     /*delete some lines*/
 
@@ -7697,7 +7697,7 @@ out:
 #ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
 static unsigned int msm7x30_sdcc_slot_status(struct device *dev)
 {
-	return (unsigned int)
+	return 1 - (unsigned int)
 		gpio_get_value_cansleep(
 			PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_SD_DET - 1));
 }
@@ -9185,6 +9185,7 @@ static void __init size_pmem_devices(void)
 
 static void __init reserve_memory_for(struct android_pmem_platform_data *p)
 {
+	printk("reserve %ld bytes for %s\n",p->size,p->name);
 	msm7x30_reserve_table[p->memory_type].size += p->size;
 }
 
@@ -9268,7 +9269,10 @@ int __init parse_tag_camera_id(const struct tag *tags)
 	for (; t->hdr.size; t = tag_next(t)) {
 		if (t->hdr.tag == ATAG_CAMERA_ID) {
 			find = 1;
-			break;
+//			break;
+		}
+		if(t->hdr.tag == ATAG_MEM || t->hdr.tag == ATAG_NONE) {
+			printk("MEM %x %x\n",t->u.mem.start,t->u.mem.size);
 		}
 	}
 	if (find)

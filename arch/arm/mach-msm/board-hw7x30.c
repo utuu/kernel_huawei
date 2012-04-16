@@ -135,7 +135,7 @@ struct regulator *vreg_gp4 = NULL;
 #include <linux/bma150.h>
 #include "board-msm7x30-regulator.h"
 
-#define MSM_PMEM_SF_SIZE	0x2400000
+#define MSM_PMEM_SF_SIZE	0x1000000 // 16M
 
 #ifdef CONFIG_HUAWEI_KERNEL
 #include <asm-arm/huawei/smem_vendor_huawei.h>
@@ -147,8 +147,8 @@ smem_huawei_vender usb_para_data;
 
 /*set fb size to 5M to save memory 2.8M */
 #ifdef CONFIG_HUAWEI_KERNEL
-#define MSM_FB_SIZE             0x500000
-#define MSM_PMEM_ADSP_SIZE      0x2D00000 //45M
+#define MSM_FB_SIZE             0x465000
+#define MSM_PMEM_ADSP_SIZE      0x2000000 
 #else
 #ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
 #define MSM_FB_SIZE            0x780000

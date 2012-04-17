@@ -420,9 +420,25 @@ static int pm8058_gpios_init(void)
 		PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_SD_DET - 1),
 		{
 			.direction      = PM_GPIO_DIR_IN,
-			.pull           = PM_GPIO_PULL_UP_1P5,
+			.output_buffer  = PM_GPIO_OUT_BUF_CMOS,
+			.output_value   = 0,
+			.pull           = PM_GPIO_PULL_DN,
 			.vin_sel        = 2,
+			.out_strength   = PM_GPIO_STRENGTH_NO,
 			.function       = PM_GPIO_FUNC_NORMAL,
+			.inv_int_pol    = 0,
+		},
+	};
+	struct pm8xxx_gpio_init_info sdcc_det1 = {
+		PM8058_GPIO_PM_TO_SYS(21),
+		{
+			.direction      = PM_GPIO_DIR_OUT,
+			.output_buffer  = PM_GPIO_OUT_BUF_CMOS,
+			.output_value   = 0,
+			.pull           = PM_GPIO_PULL_NO,
+			.vin_sel        = 0,
+			.out_strength   = PM_GPIO_STRENGTH_HIGH,
+			.function       = PM_GPIO_FUNC_PAIRED,
 			.inv_int_pol    = 0,
 		},
 	};
@@ -482,11 +498,16 @@ static int pm8058_gpios_init(void)
 #ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
     /* for new interface Qualcomm ICS4.0  */
 //	if (machine_is_msm7x30_fluid() || (machine_is_msm7x30_u8820()))
-	sdcc_det.config.inv_int_pol = 1;
+//	sdcc_det.config.inv_int_pol = 1;
 
 	rc = pm8xxx_gpio_config(sdcc_det.gpio, &sdcc_det.config);
 	if (rc) {
 		pr_err("%s PMIC_GPIO_SD_DET config failed\n", __func__);
+		return rc;
+	}
+	rc = pm8xxx_gpio_config(sdcc_det1.gpio, &sdcc_det1.config);
+	if (rc) {
+		pr_err("%s PMIC_GPIO_SD_DET1 config failed\n", __func__);
 		return rc;
 	}
 #endif

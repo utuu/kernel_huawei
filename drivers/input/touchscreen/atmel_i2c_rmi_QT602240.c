@@ -118,6 +118,11 @@ and the height of the key region is 8.5mm, TS_Y_MAX * 8.5 /91.5 */
 #define EXTRA_MAX_TOUCH_KEY    4
 #define TS_KEY_DEBOUNCE_TIMER_MS 60
 
+static int vibrate=30;
+
+module_param(vibrate, int, 00644);
+
+void msm_timed_vibrate(int);
 
 /* to define a region of touch panel */
 typedef struct
@@ -2286,6 +2291,7 @@ static void atmel_ts_work_func(struct work_struct *work)
 						{
 							input_report_key(ts->key_input, key_tmp, 1);
 							key_pressed1 = 1;
+							msm_timed_vibrate(vibrate);
 							ATMEL_DBG_MASK("the key is pressed report!\n");
 						}
 					}    
@@ -2337,6 +2343,7 @@ static void atmel_ts_work_func(struct work_struct *work)
 							key_pressed = KEY_SEARCH;							
 					 	touch_input_report_key(ts, key_pressed, 1);
 						input_sync(ts->input_dev);
+						msm_timed_vibrate(vibrate);
 					}
 					break;
 				case KEY_NUHBER2:
@@ -2348,6 +2355,7 @@ static void atmel_ts_work_func(struct work_struct *work)
 							key_pressed = KEY_MENU;
 					 	touch_input_report_key(ts, key_pressed, 1);
 						input_sync(ts->input_dev);
+						msm_timed_vibrate(vibrate);
 					}
 					break;
 				case KEY_NUHBER3:
@@ -2359,6 +2367,7 @@ static void atmel_ts_work_func(struct work_struct *work)
 							key_pressed = KEY_HOMEPAGE;
 					 	touch_input_report_key(ts, key_pressed, 1);
 						input_sync(ts->input_dev);
+						msm_timed_vibrate(vibrate);
 					}
 					break;
 				case KEY_NUHBER4:
@@ -2370,6 +2379,7 @@ static void atmel_ts_work_func(struct work_struct *work)
 							key_pressed = KEY_BACK;
 					 	touch_input_report_key(ts, key_pressed, 1);
 						input_sync(ts->input_dev);
+						msm_timed_vibrate(vibrate);
 					}
 					break;
 				default:

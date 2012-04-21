@@ -274,10 +274,11 @@ static void __pmic8xxx_kp_scan_matrix(struct pmic8xxx_kp *kp, u16 *new_state,
 		for (col = 0; col < kp->pdata->num_cols; col++) {
 			if (!(bits_changed & (1 << col)))
 				continue;
+/*
 			dev_warn(kp->dev, "key [%d:%d] %s\n", row, col,
 					!(new_state[row] & (1 << col)) ?
 					"pressed" : "released");
-
+*/
 			code = MATRIX_SCAN_CODE(row, col, PM8XXX_ROW_SHIFT);
 
 			input_event(kp->input, EV_MSC, MSC_SCAN, code);
@@ -319,7 +320,7 @@ static int pmic8xxx_kp_scan_matrix(struct pmic8xxx_kp *kp, unsigned int events)
 	u16 new_state[PM8XXX_MAX_ROWS];
 	u16 old_state[PM8XXX_MAX_ROWS];
 	int rc;
-	printk("enter %s \n",__func__);
+	//printk("enter %s \n",__func__);
 	switch (events) {
 	case 0x1:
 		rc = pmic8xxx_kp_read_matrix(kp, new_state, NULL);
@@ -353,7 +354,7 @@ static int pmic8xxx_kp_scan_matrix(struct pmic8xxx_kp *kp, unsigned int events)
 	default:
 		rc = -EINVAL;
 	}
-	printk("leave %s \n",__func__);
+	//printk("leave %s \n",__func__);
 	return rc;
 }
 
@@ -391,7 +392,7 @@ static irqreturn_t pmic8xxx_kp_irq(int irq, void *data)
 	struct pmic8xxx_kp *kp = data;
 	u8 ctrl_val, events;
 	int rc;
-	printk("enter pmic8xxx_kp_irq\n");
+	//printk("enter pmic8xxx_kp_irq\n");
 	rc = pmic8xxx_kp_read(kp, &ctrl_val, KEYP_CTRL, 1);
 	if (rc < 0) {
 		dev_err(kp->dev, "failed to read keyp_ctrl register\n");
@@ -399,12 +400,12 @@ static irqreturn_t pmic8xxx_kp_irq(int irq, void *data)
 	}
 
 	events = ctrl_val & KEYP_CTRL_EVNTS_MASK;
-	printk("events: %d in pmic8xxx_kp_irq \n",events);
+	//printk("events: %d in pmic8xxx_kp_irq \n",events);
 	rc = pmic8xxx_kp_scan_matrix(kp, events);
 	if (rc < 0)
 		dev_err(kp->dev, "failed to scan matrix\n");
 
-	printk("leave pmic8xxx_kp_irq\n");
+	//printk("leave pmic8xxx_kp_irq\n");
 	return IRQ_HANDLED;
 }
 
@@ -766,6 +767,8 @@ static int pmic8xxx_kp_resume(struct device *dev)
 
 	if (device_may_wakeup(dev)) {
 		disable_irq_wake(kp->key_sense_irq);
+		disable_irq(kp->key_sense_irq);		// very rarely this irq gets disabled
+		enable_irq(kp->key_sense_irq);		// this is just a hack to make sure it's re-enabled
 	} else {
 		mutex_lock(&input_dev->mutex);
 

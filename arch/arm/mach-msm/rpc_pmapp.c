@@ -421,11 +421,11 @@ static int pmapp_rpc_req_reply(struct pmapp_buf *tbuf, struct pmapp_buf *rbuf,
 				tbuf->data, tbuf->len,
 				rbuf->data, rbuf->size,
 				PMAPP_RPC_TIMEOUT);
-		if(len==-EAGAIN) {
+		if(len==-EAGAIN /* || len==-ERESTARTSYS*/) {
 			printk(KERN_ERR "%s: rpc failed! try again %d\n", __func__, tries);
 			msleep(20);
 		}
-	} while (len==-EAGAIN && tries--);
+	} while ((len==-EAGAIN/* || len==-ERESTARTSYS*/) && tries--);
 
 	if (len <= 0) {
 		printk(KERN_ERR "%s: rpc failed! len = %d\n", __func__, len);

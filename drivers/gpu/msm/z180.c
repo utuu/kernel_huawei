@@ -1,4 +1,4 @@
-/* Copyright (c) 2002,2007-2011, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2002,2007-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -248,11 +248,10 @@ static irqreturn_t z180_isr(int irq, void *data)
 
 	if ((device->pwrctrl.nap_allowed == true) &&
 		(device->requested_state == KGSL_STATE_NONE)) {
-        /* patch for kgsl: power state cleanup */
 		kgsl_pwrctrl_request_state(device, KGSL_STATE_NAP);
 		queue_work(device->work_queue, &device->idle_check_ws);
 	}
-	mod_timer(&device->idle_timer,
+	mod_timer_pending(&device->idle_timer,
 			jiffies + device->pwrctrl.interval_timeout);
 
 	return result;
@@ -461,7 +460,6 @@ z180_cmdstream_issueibcmds(struct kgsl_device_private *dev_priv,
 	z180_dev->ringbuffer.prevctx = context->id;
 
 	addcmd(&z180_dev->ringbuffer, index, cmd + ofs, cnt);
-    /* patch for kgsl: power state cleanup */
 	kgsl_pwrscale_busy(device);
 
 	/* Make sure the next ringbuffer entry has a marker */
@@ -526,7 +524,6 @@ static int __devinit z180_probe(struct platform_device *pdev)
 		goto error_close_ringbuffer;
 
 	kgsl_pwrscale_init(device);
-    /* patch for kgsl: power state cleanup */
 	kgsl_pwrscale_attach_policy(device, Z180_DEFAULT_PWRSCALE_POLICY);
 
 	return status;
@@ -556,7 +553,6 @@ static int z180_start(struct kgsl_device *device, unsigned int init_ram)
 {
 	int status = 0;
 
-    /* patch for kgsl: power state cleanup */
 	kgsl_pwrctrl_set_state(device, KGSL_STATE_INIT);
 
 	kgsl_pwrctrl_enable(device);
@@ -574,6 +570,7 @@ static int z180_start(struct kgsl_device *device, unsigned int init_ram)
 
 	mod_timer(&device->idle_timer, jiffies + FIRST_TIMEOUT);
 	kgsl_pwrctrl_irq(device, KGSL_PWRFLAGS_ON);
+	device->ftbl->irqctrl(device, 1);
 	return 0;
 
 error_clk_off:
@@ -584,6 +581,7 @@ error_clk_off:
 
 static int z180_stop(struct kgsl_device *device)
 {
+	device->ftbl->irqctrl(device, 0);
 	z180_idle(device, KGSL_TIMEOUT_DEFAULT);
 
 	del_timer_sync(&device->idle_timer);
@@ -838,7 +836,6 @@ static int z180_wait(struct kgsl_device *device,
 		status = 0;
 	else if (timeout == 0) {
 		status = -ETIMEDOUT;
-        /* patch for kgsl: power state cleanup */
 		kgsl_pwrctrl_set_state(device, KGSL_STATE_HUNG);
 	} else
 		status = timeout;
@@ -861,7 +858,6 @@ z180_drawctxt_destroy(struct kgsl_device *device,
 	}
 }
 
-/* patch for kgsl: power state cleanup */
 static void z180_power_stats(struct kgsl_device *device,
 			    struct kgsl_power_stats *stats)
 {

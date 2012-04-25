@@ -14,7 +14,6 @@
 #include <linux/kernel.h>
 #include <linux/slab.h>
 #include <linux/io.h>
-/* patch for kgsl: power state cleanup */
 #include <linux/spinlock.h>
 #include <mach/socinfo.h>
 #include <mach/scm.h>
@@ -31,7 +30,6 @@ struct tz_priv {
 	unsigned int no_switch_cnt;
 	unsigned int skip_cnt;
 };
-/* patch for kgsl: power state cleanup */
 spinlock_t tz_lock;
 
 #define SWITCH_OFF		200
@@ -42,7 +40,6 @@ spinlock_t tz_lock;
 
 #ifdef CONFIG_MSM_SCM
 /* Trap into the TrustZone, and call funcs there. */
-/* patch for kgsl: power state cleanup */
 static int __secure_tz_entry(u32 cmd, u32 val, u32 id)
 {
 	int ret;
@@ -116,7 +113,8 @@ static void tz_wake(struct kgsl_device *device, struct kgsl_pwrscale *pwrscale)
 {
 	struct tz_priv *priv = pwrscale->priv;
 	if (device->state != KGSL_STATE_NAP &&
-		priv->governor == TZ_GOVERNOR_ONDEMAND)
+		priv->governor == TZ_GOVERNOR_ONDEMAND &&
+		device->pwrctrl.restore_slumber == 0)
 		kgsl_pwrctrl_pwrlevel_change(device,
 					     device->pwrctrl.thermal_pwrlevel);
 }
@@ -126,7 +124,6 @@ static void tz_idle(struct kgsl_device *device, struct kgsl_pwrscale *pwrscale)
 	struct kgsl_pwrctrl *pwr = &device->pwrctrl;
 	struct tz_priv *priv = pwrscale->priv;
 	struct kgsl_power_stats stats;
-    /* patch for kgsl: power state cleanup */
 	int val, idle;
 
 	/* In "performance" mode the clock speed always stays
@@ -155,7 +152,6 @@ static void tz_idle(struct kgsl_device *device, struct kgsl_pwrscale *pwrscale)
 		priv->no_switch_cnt = 0;
 	}
 
-    /* patch for kgsl: power state cleanup */
 	idle = stats.total_time - stats.busy_time;
 	idle = (idle > 0) ? idle : 0;
 	val = __secure_tz_entry(TZ_UPDATE_ID, idle, device->id);
@@ -164,7 +160,6 @@ static void tz_idle(struct kgsl_device *device, struct kgsl_pwrscale *pwrscale)
 					     pwr->active_pwrlevel + val);
 }
 
-/* patch for kgsl: power state cleanup */
 static void tz_busy(struct kgsl_device *device,
 	struct kgsl_pwrscale *pwrscale)
 {
@@ -176,7 +171,6 @@ static void tz_sleep(struct kgsl_device *device,
 {
 	struct tz_priv *priv = pwrscale->priv;
 
-    /* patch for kgsl: power state cleanup */
 	__secure_tz_entry(TZ_RESET_ID, 0, device->id);
 	priv->no_switch_cnt = 0;
 }
@@ -194,7 +188,6 @@ static int tz_init(struct kgsl_device *device, struct kgsl_pwrscale *pwrscale)
 		return -ENOMEM;
 
 	priv->governor = TZ_GOVERNOR_ONDEMAND;
-    /* patch for kgsl: power state cleanup */
 	spin_lock_init(&tz_lock);
 	kgsl_pwrscale_policy_add_files(device, pwrscale, &tz_attr_group);
 
@@ -211,7 +204,6 @@ static void tz_close(struct kgsl_device *device, struct kgsl_pwrscale *pwrscale)
 struct kgsl_pwrscale_policy kgsl_pwrscale_policy_tz = {
 	.name = "trustzone",
 	.init = tz_init,
-    /* patch for kgsl: power state cleanup */
 	.busy = tz_busy,
 	.idle = tz_idle,
 	.sleep = tz_sleep,

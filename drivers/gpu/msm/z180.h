@@ -19,7 +19,6 @@
 #define DEVICE_2D0_NAME "kgsl-2d0"
 #define DEVICE_2D1_NAME "kgsl-2d1"
 
-/* patch for kgsl: power state cleanup */
 #define Z180_DEFAULT_PWRSCALE_POLICY  NULL
 
 struct z180_ringbuffer {

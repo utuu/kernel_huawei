@@ -746,7 +746,7 @@ static int pmic8xxx_kp_suspend(struct device *dev)
 	struct input_dev *input_dev = kp->input;
 
 	if (device_may_wakeup(dev)) {
-		enable_irq_wake(kp->key_sense_irq);
+//		enable_irq_wake(kp->key_sense_irq);
 	} else {
 		mutex_lock(&input_dev->mutex);
 
@@ -766,9 +766,7 @@ static int pmic8xxx_kp_resume(struct device *dev)
 	struct input_dev *input_dev = kp->input;
 
 	if (device_may_wakeup(dev)) {
-		disable_irq_wake(kp->key_sense_irq);
-		disable_irq(kp->key_sense_irq);		// very rarely this irq gets disabled
-		enable_irq(kp->key_sense_irq);		// this is just a hack to make sure it's re-enabled
+//		disable_irq_wake(kp->key_sense_irq);
 	} else {
 		mutex_lock(&input_dev->mutex);
 

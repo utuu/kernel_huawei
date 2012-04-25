@@ -135,7 +135,7 @@ struct regulator *vreg_gp4 = NULL;
 #include <linux/bma150.h>
 #include "board-msm7x30-regulator.h"
 
-#define MSM_PMEM_SF_SIZE	0x1000000 // 16M
+#define MSM_PMEM_SF_SIZE	0x1800000 // 24M
 
 #ifdef CONFIG_HUAWEI_KERNEL
 #include <asm-arm/huawei/smem_vendor_huawei.h>

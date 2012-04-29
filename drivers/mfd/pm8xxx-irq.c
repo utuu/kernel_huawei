@@ -329,7 +329,7 @@ static struct irq_chip pm8xxx_irq_chip = {
 	.irq_set_type	= pm8xxx_irq_set_type,
 	.irq_set_wake	= pm8xxx_irq_set_wake,
 	.irq_read_line	= pm8xxx_irq_read_line,
-//	.flags		= IRQCHIP_MASK_ON_SUSPEND,
+	.flags		= IRQCHIP_MASK_ON_SUSPEND,
 };
 
 /**

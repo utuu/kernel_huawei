@@ -17,6 +17,8 @@
 #include <linux/spinlock.h>
 #include <linux/mfd/pm8xxx/core.h>
 #include <linux/leds-pmic8058.h>
+#include <linux/pwm.h>
+#include <linux/pmic8058-pwm.h>
 
 #define SSBI_REG_ADDR_DRV_KEYPAD	0x48
 #define PM8058_DRV_KEYPAD_BL_MASK	0xf0
@@ -40,6 +42,8 @@
 
 #define PMIC8058_LED_OFFSET(id) ((id) - PMIC8058_ID_LED_0)
 
+#define FLAG_BLINK 1
+
 struct pmic8058_led_data {
 	struct device		*dev;
 	struct led_classdev	cdev;
@@ -55,8 +59,25 @@ struct pmic8058_led_data {
 	u8			reg_flash_led1;
 };
 
+static struct pwm_device       *pwm;
+
+
 #define PM8058_MAX_LEDS		7
 static struct pmic8058_led_data led_data[PM8058_MAX_LEDS];
+
+static int led_pwm_duty_pcts[56] = {
+                0, 4, 8, 12, 16, 20, 24, 28, 32, 36,
+                40, 44, 46, 52, 56, 60, 64, 68, 72, 76,
+                80, 84, 88, 92, 96, 100, 100, 100, 98, 95,
+                92, 88, 84, 82, 78, 74, 70, 66, 62, 58,
+                58, 54, 50, 48, 42, 38, 34, 30, 26, 22,
+                14, 10, 6, 4, 0
+};
+
+static int duty_size = 56;
+
+module_param_array_named(pcts, led_pwm_duty_pcts, uint, &duty_size,
+                         S_IRUGO | S_IWUSR);
 
 static void kp_bl_set(struct pmic8058_led_data *led, enum led_brightness value)
 {
@@ -65,7 +86,7 @@ static void kp_bl_set(struct pmic8058_led_data *led, enum led_brightness value)
 	unsigned long flags;
 
 	spin_lock_irqsave(&led->value_lock, flags);
-	level = (value << PM8058_DRV_KEYPAD_BL_SHIFT) &
+	level = ((value &7) << PM8058_DRV_KEYPAD_BL_SHIFT) &
 				 PM8058_DRV_KEYPAD_BL_MASK;
 
 	led->reg_kp &= ~PM8058_DRV_KEYPAD_BL_MASK;
@@ -86,12 +107,28 @@ static enum led_brightness kp_bl_get(struct pmic8058_led_data *led)
 	else
 		return LED_OFF;
 }
+static int duty=8; // in ms
+static int period=20000; // in usec
+static int low_pause=1000; // in ms
+static int high_pause=1000; // in ms
+static int lut_flags=PM_PWM_LUT_LOOP | PM_PWM_LUT_PAUSE_HI_EN | PM_PWM_LUT_PAUSE_LO_EN;
+
+
+module_param(duty,int,0664);
+module_param(period,int,0664);
+module_param(low_pause,int,0664);  
+module_param(high_pause,int,0664);
+module_param(lut_flags,int,0664);
+
 
 static void led_lc_set(struct pmic8058_led_data *led, enum led_brightness value)
 {
 	unsigned long flags;
 	int rc, offset;
 	u8 level, tmp;
+	int flashing;
+
+	printk("led_lc_set %d %d\n",led->id,led->brightness);
 
 	spin_lock_irqsave(&led->value_lock, flags);
 
@@ -103,6 +140,18 @@ static void led_lc_set(struct pmic8058_led_data *led, enum led_brightness value)
 
 	tmp &= ~PM8058_DRV_LED_CTRL_MASK;
 	tmp |= level;
+
+	if(led->flags & FLAG_BLINK) {
+		pm8058_pwm_lut_config(pwm,period,led_pwm_duty_pcts,duty,0,duty_size,low_pause,high_pause,lut_flags);
+		pm8058_pwm_lut_enable(pwm,1);
+		tmp |= 1;
+		printk("set blinking led %d %d\n",offset,tmp);
+	} else {
+		tmp &= ~1;
+		if((led_data[PMIC8058_ID_LED_0].flags | led_data[PMIC8058_ID_LED_1].flags | led_data[PMIC8058_ID_LED_2].flags)==0)
+			pm8058_pwm_lut_enable(pwm,0);
+	}
+
 	spin_unlock_irqrestore(&led->value_lock, flags);
 
 	rc = pm8xxx_writeb(led->dev->parent, SSBI_REG_ADDR_LED_CTRL(offset),
@@ -211,7 +260,7 @@ int pm8058_set_led_current(enum pmic8058_leds id, unsigned mA)
 	case PMIC8058_ID_LED_2:
 		brightness = mA / 2;
 		if (brightness  > led->cdev.max_brightness)
-			return -EINVAL;
+			brightness =  led->cdev.max_brightness;
 		led_lc_set(led, brightness);
 		break;
 
@@ -241,6 +290,7 @@ static void pmic8058_led_set(struct led_classdev *led_cdev,
 	led = container_of(led_cdev, struct pmic8058_led_data, cdev);
 
 	spin_lock_irqsave(&led->value_lock, flags);
+	led->flags &= ~FLAG_BLINK;
 	led->brightness = value;
 	schedule_work(&led->work);
 	spin_unlock_irqrestore(&led->value_lock, flags);
@@ -288,6 +338,30 @@ static enum led_brightness pmic8058_led_get(struct led_classdev *led_cdev)
 	return LED_OFF;
 }
 
+static ssize_t led_blink_store(struct device *dev,
+                                     struct device_attribute *attr,
+                                     const char *buf, size_t size)
+{
+        struct led_classdev *led_cdev = dev_get_drvdata(dev);
+	struct pmic8058_led_data *led = container_of(led_cdev, struct pmic8058_led_data, cdev);
+	int val;
+
+        val = 0;
+	sscanf(buf, "%u", &val);
+
+	if(val)
+		led->flags |= FLAG_BLINK;
+	else
+		led->flags &= ~FLAG_BLINK;
+
+	schedule_work(&led->work);
+
+        return size;
+}
+
+static DEVICE_ATTR(blink, 0666, 0, led_blink_store);
+
+
 static int pmic8058_led_probe(struct platform_device *pdev)
 {
 	struct pmic8058_leds_platform_data *pdata = pdev->dev.platform_data;
@@ -331,6 +405,8 @@ static int pmic8058_led_probe(struct platform_device *pdev)
 		goto err_reg_read;
 	}
 
+	pwm=pwm_request(4, "led flasher");
+
 	for (i = 0; i < pdata->num_leds; i++) {
 		curr_led	= &pdata->leds[i];
 		led_dat		= &led_data[curr_led->id];
@@ -341,7 +417,7 @@ static int pmic8058_led_probe(struct platform_device *pdev)
 		led_dat->cdev.brightness_get    = pmic8058_led_get;
 		led_dat->cdev.brightness	= LED_OFF;
 		led_dat->cdev.max_brightness	= curr_led->max_brightness;
-		led_dat->cdev.flags		= LED_CORE_SUSPENDRESUME;
+//		led_dat->cdev.flags		= LED_CORE_SUSPENDRESUME;
 
 		led_dat->id		        = curr_led->id;
 		led_dat->reg_kp			= reg_kp;
@@ -370,6 +446,7 @@ static int pmic8058_led_probe(struct platform_device *pdev)
 						 led_dat->id);
 			goto fail_id_check;
 		}
+		rc = device_create_file(led_dat->cdev.dev, &dev_attr_blink);
 	}
 
 	platform_set_drvdata(pdev, led_data);

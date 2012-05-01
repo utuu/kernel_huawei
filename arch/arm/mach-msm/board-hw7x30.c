@@ -961,6 +961,29 @@ static struct pmic8058_leds_platform_data pm8058_surf_leds_data = {
 	.leds	= pmic8058_surf_leds,
 };
 
+static struct pmic8058_led pm8058_u8800_leds[] = {
+	[0] = {
+		.name		= "red",
+		.max_brightness = 4,
+		.id		= PMIC8058_ID_LED_0,
+	},
+	[1] = {
+		.name		= "green",
+		.max_brightness = 4,
+		.id		= PMIC8058_ID_LED_1,
+	},
+	[2] = {
+		.name		= "blue",
+		.max_brightness = 4,
+		.id		= PMIC8058_ID_LED_2,
+	},
+};
+
+static struct pmic8058_leds_platform_data pm8058_u8800_leds_data = {
+	.num_leds = ARRAY_SIZE(pm8058_u8800_leds),
+	.leds	= pm8058_u8800_leds,
+};
+
 static struct pmic8058_led pmic8058_fluid_leds[] = {
 	[0] = {
 		.name		= "keyboard-backlight",
@@ -8469,12 +8492,17 @@ static struct msm_tsif_platform_data tsif_platform_data = {
 
 static void __init pmic8058_leds_init(void)
 {
+/*
 	if (machine_is_msm7x30_surf())
 		pm8058_7x30_data.leds_pdata = &pm8058_surf_leds_data;
 	else if (!machine_is_msm7x30_fluid())
 		pm8058_7x30_data.leds_pdata = &pm8058_ffa_leds_data;
 	else if (machine_is_msm7x30_fluid())
 		pm8058_7x30_data.leds_pdata = &pm8058_fluid_leds_data;
+	else 
+*/
+if (machine_is_msm7x30_u8800())
+                pm8058_7x30_data.leds_pdata = &pm8058_u8800_leds_data;
 }
 
 static struct msm_spm_platform_data msm_spm_data __initdata = {

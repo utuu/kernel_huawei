@@ -110,19 +110,19 @@ static enum led_brightness kp_bl_get(struct pmic8058_led_data *led)
 	else
 		return LED_OFF;
 }
-static int npause=2;
+static int npwm=1;
 
 static int duty=8; // in ms
 static int period=20000; // in usec
-static int low_pause[2]={1000,2000}; // in ms
-static int high_pause[2]={0,50}; // in ms
+static int low_pause[2]={2000,1000}; // in ms
+static int high_pause[2]={50,0}; // in ms
 static int lut_flags=PM_PWM_LUT_LOOP | PM_PWM_LUT_PAUSE_HI_EN | PM_PWM_LUT_PAUSE_LO_EN | PM_PWM_LUT_REVERSE;
 
 
 module_param(duty,int,0664);
 module_param(period,int,0664);
-module_param_array(low_pause,int,&npause,0664);
-module_param_array(high_pause,int,&npause,0664);
+module_param_array(low_pause,int,&npwm,0664);
+module_param_array(high_pause,int,&npwm,0664);
 module_param(lut_flags,int,0664);
 
 
@@ -148,8 +148,8 @@ static void led_lc_set(struct pmic8058_led_data *led, enum led_brightness value)
 	tmp |= level;
 
 	pwm_no=offset;
-	if(pwm_no==2)
-		pwm_no=1;
+	if(pwm_no>(npwm-1))
+		pwm_no=npwm-1;
 
 	if(led->flags & FLAG_BLINK) {
 		pm8058_pwm_lut_config(pwm[pwm_no],period,led_pwm_duty_pcts,duty,0,duty_size,low_pause[pwm_no],high_pause[pwm_no],lut_flags);

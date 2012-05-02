@@ -59,7 +59,7 @@ struct pmic8058_led_data {
 	u8			reg_flash_led1;
 };
 
-static struct pwm_device       *pwm;
+static struct pwm_device       *pwm[2];
 
 
 #define PM8058_MAX_LEDS		7
@@ -68,13 +68,16 @@ static struct pmic8058_led_data led_data[PM8058_MAX_LEDS];
 static int led_pwm_duty_pcts[56] = {
                 0, 4, 8, 12, 16, 20, 24, 28, 32, 36,
                 40, 44, 46, 52, 56, 60, 64, 68, 72, 76,
-                80, 84, 88, 92, 96, 100, 100, 100, 98, 95,
+                80, 84, 88, 92, 96, 100};
+/*
+ 100, 100, 98, 95,
                 92, 88, 84, 82, 78, 74, 70, 66, 62, 58,
                 58, 54, 50, 48, 42, 38, 34, 30, 26, 22,
                 14, 10, 6, 4, 0
 };
+*/
 
-static int duty_size = 56;
+static int duty_size = 26;
 
 module_param_array_named(pcts, led_pwm_duty_pcts, uint, &duty_size,
                          S_IRUGO | S_IWUSR);
@@ -107,17 +110,19 @@ static enum led_brightness kp_bl_get(struct pmic8058_led_data *led)
 	else
 		return LED_OFF;
 }
+static int npause=2;
+
 static int duty=8; // in ms
 static int period=20000; // in usec
-static int low_pause=1000; // in ms
-static int high_pause=1000; // in ms
-static int lut_flags=PM_PWM_LUT_LOOP | PM_PWM_LUT_PAUSE_HI_EN | PM_PWM_LUT_PAUSE_LO_EN;
+static int low_pause[2]={1000,2000}; // in ms
+static int high_pause[2]={0,50}; // in ms
+static int lut_flags=PM_PWM_LUT_LOOP | PM_PWM_LUT_PAUSE_HI_EN | PM_PWM_LUT_PAUSE_LO_EN | PM_PWM_LUT_REVERSE;
 
 
 module_param(duty,int,0664);
 module_param(period,int,0664);
-module_param(low_pause,int,0664);  
-module_param(high_pause,int,0664);
+module_param_array(low_pause,int,&npause,0664);
+module_param_array(high_pause,int,&npause,0664);
 module_param(lut_flags,int,0664);
 
 
@@ -127,6 +132,7 @@ static void led_lc_set(struct pmic8058_led_data *led, enum led_brightness value)
 	int rc, offset;
 	u8 level, tmp;
 	int flashing;
+	int pwm_no;
 
 	printk("led_lc_set %d %d\n",led->id,led->brightness);
 
@@ -141,15 +147,22 @@ static void led_lc_set(struct pmic8058_led_data *led, enum led_brightness value)
 	tmp &= ~PM8058_DRV_LED_CTRL_MASK;
 	tmp |= level;
 
+	pwm_no=offset;
+	if(pwm_no==2)
+		pwm_no=1;
+
 	if(led->flags & FLAG_BLINK) {
-		pm8058_pwm_lut_config(pwm,period,led_pwm_duty_pcts,duty,0,duty_size,low_pause,high_pause,lut_flags);
-		pm8058_pwm_lut_enable(pwm,1);
-		tmp |= 1;
+		pm8058_pwm_lut_config(pwm[pwm_no],period,led_pwm_duty_pcts,duty,0,duty_size,low_pause[pwm_no],high_pause[pwm_no],lut_flags);
+		pm8058_pwm_lut_enable(pwm[pwm_no],1);
+		tmp |= (pwm_no+1);
 		printk("set blinking led %d %d\n",offset,tmp);
 	} else {
-		tmp &= ~1;
+		tmp &= ~(pwm_no+1);
+		pm8058_pwm_lut_enable(pwm[pwm_no],0);
+/*
 		if((led_data[PMIC8058_ID_LED_0].flags | led_data[PMIC8058_ID_LED_1].flags | led_data[PMIC8058_ID_LED_2].flags)==0)
 			pm8058_pwm_lut_enable(pwm,0);
+*/
 	}
 
 	spin_unlock_irqrestore(&led->value_lock, flags);
@@ -405,7 +418,9 @@ static int pmic8058_led_probe(struct platform_device *pdev)
 		goto err_reg_read;
 	}
 
-	pwm=pwm_request(4, "led flasher");
+	pwm[0]=pwm_request(4, "red blink");
+	pwm[1]=pwm_request(5, "green blink");
+//	pwm[2]=pwm_request(6, "blue blink");
 
 	for (i = 0; i < pdata->num_leds; i++) {
 		curr_led	= &pdata->leds[i];

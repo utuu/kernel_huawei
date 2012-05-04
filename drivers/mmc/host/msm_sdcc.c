@@ -4048,14 +4048,14 @@ msmsdcc_probe(struct platform_device *pdev)
 #ifdef CONFIG_MMC_MSM_SDIO_SUPPORT
 	mmc->caps |= MMC_CAP_SDIO_IRQ;
 #endif
-/*
+
 #ifdef CONFIG_HUAWEI_KERNEL
     if (4 == host->pdev_id )
 	{
         mmc->caps |= MMC_CAP_NEEDS_POLL;
     }
 #endif
-*/
+
 	if (plat->is_sdio_al_client)
 		mmc->pm_flags |= MMC_PM_IGNORE_PM_NOTIFY;
 

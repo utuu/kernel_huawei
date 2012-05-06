@@ -177,6 +177,7 @@ static int __init nt35582_init(void)
 	
 	ret = platform_driver_register(&this_driver);
 	if (!ret) {
+		mddi_queue_register_write(0xB102, 0x7C, 0, 0);
 		pinfo = &nt35582_panel_data.panel_info;
 		pinfo->xres = 480;
 		pinfo->yres = 800;
@@ -196,10 +197,10 @@ static int __init nt35582_init(void)
         MDDI_LCD_DEBUG("%s: BYD LCD and Truly LCD,set MDDI_CLK=%d \n",__func__, pinfo->clk_rate);
 		pinfo->lcd.vsync_enable = TRUE;
 /* Reduce the fps,sync depend on the vsync signal*/
-        pinfo->lcd.refx100 = 4000;
+        pinfo->lcd.refx100 = 6118;
 		pinfo->lcd.v_back_porch = 0;
 		pinfo->lcd.v_front_porch = 0;
-		pinfo->lcd.v_pulse_width = 22;
+		pinfo->lcd.v_pulse_width = 0;
 		pinfo->lcd.hw_vsync_mode = TRUE;
 		pinfo->lcd.vsync_notifier_period = 0;
 		pinfo->bl_max = 255;

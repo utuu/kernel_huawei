@@ -356,18 +356,31 @@ static ssize_t led_blink_store(struct device *dev,
                                      const char *buf, size_t size)
 {
         struct led_classdev *led_cdev = dev_get_drvdata(dev);
-	struct pmic8058_led_data *led = container_of(led_cdev, struct pmic8058_led_data, cdev);
-	int val;
-
-        val = 0;
+	struct pmic8058_led_data *led;
+	int i;
+	int val=0;
 	sscanf(buf, "%u", &val);
 
-	if(val)
-		led->flags |= FLAG_BLINK;
-	else
-		led->flags &= ~FLAG_BLINK;
+	printk("led_blink_store %p %p\n",led_cdev,led_data);
+	if(led_cdev==(struct led_classdev *)led_data) {
+		for(i=0;i<3;i++) {
+			led=&led_data[PMIC8058_ID_LED_0+i];
+			if(val)
+				led->flags |= FLAG_BLINK;
+			else
+				led->flags &= ~FLAG_BLINK;
+			schedule_work(&led->work);
+		}
+	} else {
+		led = container_of(led_cdev, struct pmic8058_led_data, cdev);
 
-	schedule_work(&led->work);
+		if(val)
+			led->flags |= FLAG_BLINK;
+		else
+			led->flags &= ~FLAG_BLINK;
+		schedule_work(&led->work);
+
+	}
 
         return size;
 }
@@ -465,6 +478,7 @@ static int pmic8058_led_probe(struct platform_device *pdev)
 	}
 
 	platform_set_drvdata(pdev, led_data);
+	rc=device_create_file(&pdev->dev, &dev_attr_blink);
 
 	return 0;
 

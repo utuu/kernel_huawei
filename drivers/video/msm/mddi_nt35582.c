@@ -135,9 +135,97 @@ static int nt35582_lcd_off(struct platform_device *pdev)
 	return ret;
 }
 
+static ssize_t nov_t2_show(struct device *dev, struct device_attribute *attr,
+                       char *buf)
+{
+	struct msm_mddi_client_data *client_data = dev->platform_data;
+	int ret;
+	unsigned val;
+	unsigned v1,v2;
+
+	mddi_queue_register_read(0xb101, &v1, 0, 0);
+	mddi_queue_register_read(0xb102, &v2, 0, 0);
+
+	val=(v2 << 8) | v1;
+
+	ret = sprintf(buf, "T2: d%u, 0x%04xh\n", val, val);
+
+	return ret;
+}
+
+static ssize_t nov_t2_store(struct device *dev, struct device_attribute *attr,
+                       const char *buf, size_t count)
+{
+	unsigned val;
+
+	sscanf(buf, "%u", &val);
+
+	mddi_queue_register_write(0xb101, val & 0xff, 0, 0);
+	mddi_queue_register_write(0xb102, (val >> 8) &0xff, 0, 0);
+
+	return count;
+}
+static int addr;
+
+static ssize_t nov_addr_show(struct device *dev, struct device_attribute *attr,
+                       char *buf)
+{
+	int ret;
+	ret = sprintf(buf, "%d", addr);
+	return ret;
+}
+
+static ssize_t nov_addr_store(struct device *dev, struct device_attribute *attr,
+                       const char *buf, size_t count)
+{
+
+	sscanf(buf, "%u", &addr);
+
+	return count;
+}
+static ssize_t nov_data_show(struct device *dev, struct device_attribute *attr,
+                       char *buf)
+{
+	struct msm_mddi_client_data *client_data = dev->platform_data;
+	int ret;
+	unsigned val;
+
+	mddi_queue_register_read(addr, &val, 0, 0);
+
+	ret = sprintf(buf, "%x: d%u, 0x%02xh\n", addr, val, val);
+
+	return ret;
+}
+
+static ssize_t nov_data_store(struct device *dev, struct device_attribute *attr,
+                       const char *buf, size_t count)
+{
+	unsigned val;
+
+	sscanf(buf, "%u", &val);
+
+	mddi_queue_register_write(addr, val, 0, 0);
+
+	return count;
+}
+
+DEVICE_ATTR(t2, 0644, nov_t2_show, nov_t2_store);
+DEVICE_ATTR(addr, 0644, nov_addr_show, nov_addr_store);
+DEVICE_ATTR(data, 0644, nov_data_show, nov_data_store);
+
+
 static int __devinit nt35582_probe(struct platform_device *pdev)
 {
 	msm_fb_add_device(pdev);
+	if (device_create_file(&pdev->dev, &dev_attr_t2)) {
+		printk(KERN_WARNING "%s: device_create_file failed\n", __func__);
+	}
+	if (device_create_file(&pdev->dev, &dev_attr_addr)) {
+		printk(KERN_WARNING "%s: device_create_file failed\n", __func__);
+	}
+	if (device_create_file(&pdev->dev, &dev_attr_data)) {
+		printk(KERN_WARNING "%s: device_create_file failed\n", __func__);
+	}
         /* delete some lines */
 	return 0;
 }
@@ -163,6 +251,7 @@ static struct platform_device this_device = {
 		.platform_data = &nt35582_panel_data,
 	}
 };
+
 static int __init nt35582_init(void)
 {
 	int ret;

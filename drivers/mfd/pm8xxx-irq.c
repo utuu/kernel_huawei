@@ -227,8 +227,7 @@ static void pm8xxx_irq_mask(struct irq_data *d)
 	block = pmirq / 8;
 	master = block / 8;
 	irq_bit = pmirq % 8;
-	printk("pm8xxx_irq_mask %d\n", pmirq);
-
+//	printk("pm8xxx_irq_mask %d\n", pmirq);
 	if (chip->config[pmirq] == 0) {
 		pr_warn("masking rouge irq=%d pmirq=%d\n", d->irq, pmirq);
 		chip->config[pmirq] = irq_bit << PM_IRQF_BITS_SHIFT;
@@ -248,7 +247,7 @@ static void pm8xxx_irq_mask_ack(struct irq_data *d)
 	block = pmirq / 8;
 	master = block / 8;
 	irq_bit = pmirq % 8;
-	printk("pm8xxx_irq_mask_ack %d\n", pmirq);
+//	printk("pm8xxx_irq_mask_ack %d\n", pmirq);
 
 	if (chip->config[pmirq] == 0) {
 		pr_warn("mask acking rouge irq=%d pmirq=%d\n", d->irq, pmirq);
@@ -270,7 +269,7 @@ static void pm8xxx_irq_unmask(struct irq_data *d)
 	master = block / 8;
 	irq_bit = pmirq % 8;
 
-	printk("pm8xxx_irq_unmask %d\n", pmirq);
+//	printk("pm8xxx_irq_unmask %d\n", pmirq);
 	config = chip->config[pmirq];
 	pm8xxx_read_config_irq(chip, block, config, &hw_conf);
 	/* check if it is masked */

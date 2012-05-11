@@ -104,7 +104,7 @@ static void msm_flashlight_led_set(struct led_classdev *led_cdev,
         int PWM_PERIOD = NSEC_PER_SEC / 500;
 
         if(value==1) // some apps expect the flashlight to be either on or off
-                value=100;
+                value=50;
 
         if (!msm_flash_pwm) {
                 rc = pm8xxx_gpio_config( 205, &camera_flash);

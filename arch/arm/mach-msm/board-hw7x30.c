@@ -161,6 +161,11 @@ smem_huawei_vender usb_para_data;
 #define PMEM_KERNEL_EBI0_SIZE   0x600000
 #define MSM_PMEM_AUDIO_SIZE     0x200000
 
+#ifdef CONFIG_FB_MSM_DEFAULT_DEPTH_RGB565
+#undef MSM_PMEM_SF_SIZE
+#define MSM_PMEM_SF_SIZE        0x0c00000
+#endif
+
 #define PMIC_GPIO_INT		27
 #define PMIC_VREG_WLAN_LEVEL	2900
 #define PMIC_GPIO_SD_DET	21

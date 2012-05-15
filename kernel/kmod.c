@@ -56,7 +56,7 @@ static DEFINE_SPINLOCK(umh_sysctl_lock);
 /*
 	modprobe_path is set via /proc/sys.
 */
-char modprobe_path[KMOD_PATH_LEN] = "/sbin/modprobe";
+char modprobe_path[KMOD_PATH_LEN] = "/system/xbin/modprobe";
 
 /**
  * __request_module - try to load a kernel module

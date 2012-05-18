@@ -9264,7 +9264,7 @@ static int msm7x30_paddr_to_memtype(unsigned int paddr)
 	if (paddr < 0x40000000)
 		return MEMTYPE_EBI0;
 	if (paddr >= 0x40000000 && paddr < 0x80000000)
-		return MEMTYPE_EBI1;
+		return MEMTYPE_EBI0;
 	return MEMTYPE_NONE;
 }
 

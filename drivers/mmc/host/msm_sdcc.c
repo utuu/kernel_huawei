@@ -1295,13 +1295,11 @@ msmsdcc_pio_irq(int irq, void *dev_id)
 
 		/* Map the current scatter buffer */
 		local_irq_save(flags);
-#ifdef CONFIG_HUAWEI_WIFI_SDCC
 		if ( NULL == host->pio.sg ) {
 			local_irq_restore(flags);
 			printk(KERN_ERR"host->pio.sg is NULL\n");
 			break;
 		}
-#endif
 		buffer = kmap_atomic(sg_page(host->pio.sg),
 				     KM_BIO_SRC_IRQ) + host->pio.sg->offset;
 		buffer += host->pio.sg_off;
@@ -4197,7 +4195,7 @@ msmsdcc_probe(struct platform_device *pdev)
 
 /* ignore pm notify while system resume */
 #ifdef CONFIG_HUAWEI_KERNEL
-	if( SDCC_WIFI_SLOT == host->pdev_id ) {
+	if( 3 == host->pdev_id ) {
 		mmc->pm_flags |= MMC_PM_IGNORE_PM_NOTIFY;
 	}
 #endif

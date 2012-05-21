@@ -5853,8 +5853,8 @@ static void __init msm_fb_add_devices(void)
 	msm_fb_register_device("mdp", &mdp_pdata);
 	msm_fb_register_device("pmdh", &mddi_pdata);
 	/* removed several lines */
-	msm_fb_register_device("dtv", &dtv_pdata);
-	msm_fb_register_device("tvenc", &atv_pdata);
+//	msm_fb_register_device("dtv", &dtv_pdata);
+//	msm_fb_register_device("tvenc", &atv_pdata);
 #ifdef CONFIG_FB_MSM_TVOUT
 	msm_fb_register_device("tvout_device", NULL);
 #endif

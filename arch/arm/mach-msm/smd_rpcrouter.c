@@ -1879,7 +1879,6 @@ int __msm_rpc_read(struct msm_rpc_endpoint *ept,
 
 	spin_lock_irqsave(&ept->read_q_lock, flags);
 	if (list_empty(&ept->read_q)) {
-		wake_unlock(&ept->read_q_wake_lock);
 		spin_unlock_irqrestore(&ept->read_q_lock, flags);
 		return -EAGAIN;
 	}

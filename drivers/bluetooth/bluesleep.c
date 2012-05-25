@@ -133,12 +133,7 @@ struct proc_dir_entry *bluetooth_dir, *sleep_dir;
 
 static void hsuart_power(int on)
 {
-    if(NULL == bsi->uport)
-    {
-        BT_ERR("bsi->uport is null");
-        return;
-    }
-    if (on) {
+	if (on) {
 		msm_hs_request_clock_on(bsi->uport);
 		msm_hs_set_mctrl(bsi->uport, TIOCM_RTS);
 	} else {
@@ -170,22 +165,6 @@ void bluesleep_sleep_wakeup(void)
 		/*Activating UART */
 		hsuart_power(1);
 	}
- #ifdef CONFIG_HUAWEI_KERNEL
- else
- {
-     /*Tx idle, Rx busy, we must also make host_wake asserted, that is low
-     * 1 means bt chip can sleep, in bluesleep.c
-     */
-         /* Here we depend on the status of MSM gpio, for stability */
-         if(1 == gpio_get_value(bsi->ext_wake))
-     {
-         printk(KERN_ERR "-bluesleep_sleep_wakeup wakeup bt chip\n");
-         /*0 means wakup bt chip */
-         gpio_set_value(bsi->ext_wake, 0);  
-         mod_timer(&tx_timer, jiffies + (TX_TIMER_INTERVAL * HZ));
-     } 
- }
- #endif
 }
 
 /**
@@ -367,16 +346,9 @@ static int bluesleep_start(void)
 
 	/* assert BT_WAKE */
 	gpio_set_value(bsi->ext_wake, 0);
-/* add RISING condition to invoke MSM7230 to update the SLEEP FLAG */
-#ifndef CONFIG_HUAWEI_KERNEL
-    retval = request_irq(bsi->host_wake_irq, bluesleep_hostwake_isr,
-                IRQF_DISABLED | IRQF_TRIGGER_FALLING,
-                "bluetooth hostwake", NULL);
-#else
 	retval = request_irq(bsi->host_wake_irq, bluesleep_hostwake_isr,
-				IRQF_DISABLED | IRQF_TRIGGER_FALLING | IRQF_TRIGGER_RISING,
+				IRQF_DISABLED | IRQF_TRIGGER_FALLING,
 				"bluetooth hostwake", NULL);
-#endif
 	if (retval  < 0) {
 		BT_ERR("Couldn't acquire BT_HOST_WAKE IRQ");
 		goto fail;

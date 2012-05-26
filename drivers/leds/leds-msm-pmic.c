@@ -103,7 +103,7 @@ static void msm_flashlight_led_set(struct led_classdev *led_cdev,
         int rc = 0;
         int PWM_PERIOD = NSEC_PER_SEC / 500;
 
-        if(value==1) // some apps expect the flashlight to be either on or off
+        if(value>50) // some apps expect the flashlight to be either on or off
                 value=50;
 
         if (!msm_flash_pwm) {

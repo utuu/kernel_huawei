@@ -517,7 +517,7 @@ static void pmic8xxx_kp_close(struct input_dev *dev)
 {
 	struct pmic8xxx_kp *kp = input_get_drvdata(dev);
 
-	pmic8xxx_kp_disable(kp);
+//	pmic8xxx_kp_disable(kp);
 }
 
 /*

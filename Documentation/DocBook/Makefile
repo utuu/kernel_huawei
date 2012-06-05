@@ -6,7 +6,7 @@
 # To add a new book the only step required is to add the book to the
 # list of DOCBOOKS.
 
-DOCBOOKS := z8530book.xml mcabook.xml \
+DOCBOOKS := z8530book.xml mcabook.xml device-drivers.xml \
 	    kernel-hacking.xml kernel-locking.xml deviceiobook.xml \
 	    writing_usb_driver.xml networking.xml \
 	    kernel-api.xml filesystems.xml lsm.xml usb.xml kgdb.xml \
@@ -14,7 +14,7 @@ DOCBOOKS := z8530book.xml mcabook.xml \
 	    genericirq.xml s390-drivers.xml uio-howto.xml scsi.xml \
 	    80211.xml debugobjects.xml sh.xml regulator.xml \
 	    alsa-driver-api.xml writing-an-alsa-driver.xml \
-	    tracepoint.xml media.xml drm.xml #device-drivers.xml 
+	    tracepoint.xml media.xml drm.xml
 
 ###
 # The build process is as follows (targets):

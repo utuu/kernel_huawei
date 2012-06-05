@@ -108,6 +108,7 @@ struct pmic8xxx_kp {
 	u16 stuckstate[PM8XXX_MAX_ROWS];
 
 	u8 ctrl_reg;
+	int disable_depth;
 };
 
 static int pmic8xxx_kp_write_u8(struct pmic8xxx_kp *kp,
@@ -482,26 +483,29 @@ static int  __devinit pmic8xxx_kp_config_gpio(int gpio_start, int num_gpios,
 
 static int pmic8xxx_kp_enable(struct pmic8xxx_kp *kp)
 {
-	int rc;
+	int rc=0;
 
-	kp->ctrl_reg |= KEYP_CTRL_KEYP_EN;
+        if (--kp->disable_depth == 0) {
+		kp->ctrl_reg |= KEYP_CTRL_KEYP_EN;
 
-	rc = pmic8xxx_kp_write_u8(kp, kp->ctrl_reg, KEYP_CTRL);
-	if (rc < 0)
-		dev_err(kp->dev, "Error writing KEYP_CTRL reg, rc=%d\n", rc);
-
+		rc = pmic8xxx_kp_write_u8(kp, kp->ctrl_reg, KEYP_CTRL);
+		if (rc < 0)
+			dev_err(kp->dev, "Error writing KEYP_CTRL reg, rc=%d\n", rc);
+	}
 	return rc;
 }
 
 static int pmic8xxx_kp_disable(struct pmic8xxx_kp *kp)
 {
-	int rc;
+	int rc=0;
 
-	kp->ctrl_reg &= ~KEYP_CTRL_KEYP_EN;
+	if (kp->disable_depth++ == 0) {
+		kp->ctrl_reg &= ~KEYP_CTRL_KEYP_EN;
 
-	rc = pmic8xxx_kp_write_u8(kp, kp->ctrl_reg, KEYP_CTRL);
-	if (rc < 0)
-		return rc;
+		rc = pmic8xxx_kp_write_u8(kp, kp->ctrl_reg, KEYP_CTRL);
+		if (rc < 0)
+			return rc;
+	}
 
 	return rc;
 }

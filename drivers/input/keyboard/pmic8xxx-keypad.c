@@ -500,9 +500,9 @@ static int pmic8xxx_kp_disable(struct pmic8xxx_kp *kp)
 	int rc=0;
 
 	if (kp->disable_depth++ == 0) {
-		kp->ctrl_reg &= ~KEYP_CTRL_KEYP_EN;
+//		kp->ctrl_reg &= ~KEYP_CTRL_KEYP_EN;
 
-		rc = pmic8xxx_kp_write_u8(kp, kp->ctrl_reg, KEYP_CTRL);
+//		rc = pmic8xxx_kp_write_u8(kp, kp->ctrl_reg, KEYP_CTRL);
 		if (rc < 0)
 			return rc;
 	}
@@ -521,7 +521,7 @@ static void pmic8xxx_kp_close(struct input_dev *dev)
 {
 	struct pmic8xxx_kp *kp = input_get_drvdata(dev);
 
-//	pmic8xxx_kp_disable(kp);
+	pmic8xxx_kp_disable(kp);
 }
 
 /*
@@ -771,7 +771,7 @@ static int pmic8xxx_kp_resume(struct device *dev)
 
 	if (device_may_wakeup(dev)) {
 		disable_irq_wake(kp->key_sense_irq);
-		pmic8xxx_kp_enable(kp);
+//		pmic8xxx_kp_enable(kp);
 	} else {
 		mutex_lock(&input_dev->mutex);
 

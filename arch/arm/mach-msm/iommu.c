@@ -690,6 +690,19 @@ fail:
 	return ret;
 }
 
+static unsigned int get_phys_addr(struct scatterlist *sg)
+{
+	/*
+	 * Try sg_dma_address first so that we can
+	 * map carveout regions that do not have a
+	 * struct page associated with them.
+	 */
+	unsigned int pa = sg_dma_address(sg);
+	if (pa == 0)
+		pa = sg_phys(sg);
+	return pa;
+}
+
 static int msm_iommu_map_range(struct iommu_domain *domain, unsigned int va,
 			       struct scatterlist *sg, unsigned int len,
 			       int prot)
@@ -728,7 +741,12 @@ static int msm_iommu_map_range(struct iommu_domain *domain, unsigned int va,
 	sl_table = (unsigned long *) __va(((*fl_pte) & FL_BASE_MASK));
 	sl_offset = SL_OFFSET(va);
 
-	chunk_pa = sg_phys(sg);
+	chunk_pa = get_phys_addr(sg);
+	if (chunk_pa == 0) {
+		pr_debug("No dma address for sg %p\n", sg);
+		ret = -EINVAL;
+		goto fail;
+	}
 
 	while (offset < len) {
 		/* Set up a 2nd level page table if one doesn't exist */
@@ -770,7 +788,13 @@ static int msm_iommu_map_range(struct iommu_domain *domain, unsigned int va,
 			if (chunk_offset >= sg->length && offset < len) {
 				chunk_offset = 0;
 				sg = sg_next(sg);
-				chunk_pa = sg_phys(sg);
+				chunk_pa = get_phys_addr(sg);
+				if (chunk_pa == 0) {
+					pr_debug("No dma address for sg %p\n",
+						 sg);
+					ret = -EINVAL;
+					goto fail;
+				}
 			}
 		}
 
@@ -979,6 +1003,12 @@ fail:
 	return 0;
 }
 
+static phys_addr_t msm_iommu_get_pt_base_addr(struct iommu_domain *domain)
+{
+	struct msm_priv *priv = domain->priv;
+	return __pa(priv->pgtable);
+}
+
 static struct iommu_ops msm_iommu_ops = {
 	.domain_init = msm_iommu_domain_init,
 	.domain_destroy = msm_iommu_domain_destroy,
@@ -989,7 +1019,8 @@ static struct iommu_ops msm_iommu_ops = {
 	.map_range = msm_iommu_map_range,
 	.unmap_range = msm_iommu_unmap_range,
 	.iova_to_phys = msm_iommu_iova_to_phys,
-	.domain_has_cap = msm_iommu_domain_has_cap
+	.domain_has_cap = msm_iommu_domain_has_cap,
+	.get_pt_base_addr = msm_iommu_get_pt_base_addr
 };
 
 static int __init get_tex_class(int icp, int ocp, int mt, int nos)

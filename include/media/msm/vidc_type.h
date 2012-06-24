@@ -1,6 +1,4 @@
-/**
- *
- * Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -10,20 +8,23 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
+ *
  */
+#ifndef VIDC_TYPE_H
+#define VIDC_TYPE_H
 
-#ifndef __MACH_ION_H_
-#define __MACH_ION_H_
+#include <linux/types.h>
+#include <linux/kernel.h>
+#include <linux/mutex.h>
+#include <linux/slab.h>
+#include <linux/string.h>
+#include <linux/list.h>
+#include <linux/time.h>
+#include <linux/dma-mapping.h>
+#include <linux/android_pmem.h>
 
-enum ion_memory_types {
-	ION_EBI_TYPE,
-	ION_SMI_TYPE,
-};
+#define DEBUG   0
+#define VIDC_ENABLE_DBGFS
 
-enum ion_permission_type {
-	IPT_TYPE_MM_CARVEOUT = 0,
-	IPT_TYPE_MFC_SHAREDMEM = 1,
-	IPT_TYPE_MDP_WRITEBACK = 2,
-};
-
+#define USE_RES_TRACKER
 #endif

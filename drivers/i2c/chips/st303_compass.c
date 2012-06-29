@@ -84,7 +84,7 @@ static struct workqueue_struct *gs_wq;
 static struct i2c_client *this_client;
 extern struct input_dev *sensor_dev;
 #ifdef DEBUG_WQ
-static int accel_delay = 1000; 
+static int accel_delay = 600;/* 1000 Andyi 2012.6.26*/ 
 #endif
 
 struct st303_data {

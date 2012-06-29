@@ -118,7 +118,7 @@ struct gs_data {
 
 static struct gs_data  *this_gs_data;
 #ifdef GS303_DEBUG_ST303_GS
-static int accel_delay = 1000;
+static int accel_delay = 600; /*1000 Andyi 2012.6.26*/
 #else
 static int accel_delay = ST303_TIMRER;     /*1000000s*/
 #endif
